@@ -863,9 +863,9 @@ def check_document_status():
 			filters={
 				"docstatus": 1,
 				"facturasend_estado": ["in", ["Enviado"]],
-				"facturasend_lote_id": ["!=", ""]
+				"facturasend_cdc": ["!=", ""]
 			},
-			fields=["name", "facturasend_lote_id", "facturasend_cdc"],
+			fields=["name", "facturasend_cdc"],
 			limit=100
 		)
 		
@@ -874,53 +874,48 @@ def check_document_status():
 		if not pending_docs:
 			return
 		
-		# Agrupar por lote_id
-		lotes = {}
-		for doc in pending_docs:
-			lote_id = doc.facturasend_lote_id
-			if lote_id not in lotes:
-				lotes[lote_id] = []
-			lotes[lote_id].append(doc)
-		
-		frappe.log_error(f"Consultando estado de {len(lotes)} lotes: {list(lotes.keys())}", "FacturaSend Status Check")
-		
-		# Consultar estado de cada lote
-		for lote_id, docs in lotes.items():
+		# Consultar estado de cada documento individualmente por CDC
+		for doc_info in pending_docs:
 			try:
-				frappe.log_error(f"Consultando lote {lote_id} con {len(docs)} documentos", "FacturaSend Status Check Lote")
-				status_data = get_lote_status(lote_id, settings)
+				frappe.log_error(f"Consultando estado de {doc_info.name} con CDC {doc_info.facturasend_cdc}", "FacturaSend Status Check Doc")
+				status_data = get_document_status_by_cdc(doc_info.facturasend_cdc, settings)
 				
 				if status_data and status_data.get('success'):
-					frappe.log_error(f"Lote {lote_id} consultado exitosamente", "FacturaSend Status Check OK")
-					update_documents_status(docs, status_data)
+					frappe.log_error(f"Documento {doc_info.name} consultado exitosamente", "FacturaSend Status Check OK")
+					update_single_document_status(doc_info.name, status_data)
 				else:
-					frappe.log_error(f"Error consultando lote {lote_id}: {status_data.get('error', 'Unknown')}", "FacturaSend Status Check Error")
+					frappe.log_error(f"Error consultando {doc_info.name}: {status_data.get('error', 'Unknown')}", "FacturaSend Status Check Error")
 			except Exception as e:
-				frappe.log_error(frappe.get_traceback(), f"Error consultando estado del lote {lote_id}")
+				frappe.log_error(frappe.get_traceback(), f"Error consultando estado del documento {doc_info.name}")
 		
-		frappe.log_error(f"Consulta de estados completada para {len(lotes)} lotes", "FacturaSend Status Check Complete")
+		frappe.log_error(f"Consulta de estados completada para {len(pending_docs)} documentos", "FacturaSend Status Check Complete")
 		
 	except Exception as e:
 		frappe.log_error(frappe.get_traceback(), "FacturaSend Status Check Fatal Error")
 
 
-def get_lote_status(lote_id, settings):
-	"""Consulta el estado de un lote en FacturaSend"""
+def get_document_status_by_cdc(cdc, settings):
+	"""Consulta el estado de un documento electrónico por CDC"""
 	
 	try:
-		url = f"{settings.base_url}/{settings.tenant_id}/lote/{lote_id}/consulta"
+		url = f"{settings.base_url}/{settings.tenant_id}/de/estado"
 		
 		api_key = settings.get_password('api_key')
 		if not api_key:
 			return {"success": False, "error": "API Key no configurado"}
 		
 		headers = {
-			"Authorization": f"Bearer {api_key}"
+			"Authorization": f"Bearer {api_key}",
+			"Content-Type": "application/json"
 		}
 		
-		frappe.log_error(f"GET {url}", "FacturaSend Status Query Request")
+		payload = {
+			"cdc": cdc
+		}
 		
-		response = requests.get(url, headers=headers, timeout=30)
+		frappe.log_error(f"POST {url}\nPayload: {json.dumps(payload, indent=2)}", "FacturaSend Status Query Request")
+		
+		response = requests.post(url, json=payload, headers=headers, timeout=30)
 		
 		frappe.log_error(f"Status: {response.status_code}\nResponse: {response.text}", "FacturaSend Status Query Response")
 		
@@ -934,35 +929,41 @@ def get_lote_status(lote_id, settings):
 		return {"success": False, "error": str(e)}
 
 
-def update_documents_status(docs, status_data):
-	"""Actualiza el estado de los documentos según la respuesta de FacturaSend"""
+def update_single_document_status(doc_name, status_data):
+	"""Actualiza el estado de un documento según la respuesta de FacturaSend"""
 	
-	de_list = status_data.get('result', {}).get('deList', [])
-	
-	# Crear un mapa de CDC a estado
-	cdc_status_map = {}
-	for de in de_list:
-		cdc_status_map[de.get('cdc')] = de
-	
-	for doc_info in docs:
-		if doc_info.facturasend_cdc in cdc_status_map:
-			de = cdc_status_map[doc_info.facturasend_cdc]
-			
-			doc = frappe.get_doc("Sales Invoice", doc_info.name)
-			
-			# Mapear estado de FacturaSend a nuestro estado
-			estado_fs = de.get('estado', 'Enviado')
-			if estado_fs == 'Aprobado':
-				doc.facturasend_estado = 'Aprobado'
-			elif estado_fs == 'Rechazado':
-				doc.facturasend_estado = 'Rechazado'
-			else:
-				doc.facturasend_estado = 'Enviado'
-			
-			doc.facturasend_mensaje_estado = de.get('mensaje', '')
-			doc.save(ignore_permissions=True)
-	
-	frappe.db.commit()
+	try:
+		# La respuesta tiene la estructura:
+		# {"success": true, "message": "Consulta exitosa", "estado": "Aprobado", ...}
+		
+		doc = frappe.get_doc("Sales Invoice", doc_name)
+		
+		# Mapear estado de FacturaSend a nuestro estado
+		estado_fs = status_data.get('estado', 'Enviado')
+		
+		if estado_fs == 'Aprobado' or estado_fs == '2':
+			doc.facturasend_estado = 'Aprobado'
+		elif estado_fs == 'Rechazado' or estado_fs == '4':
+			doc.facturasend_estado = 'Rechazado'
+		else:
+			doc.facturasend_estado = 'Enviado'
+		
+		# Actualizar mensaje con la información del estado
+		mensaje_partes = []
+		if status_data.get('message'):
+			mensaje_partes.append(status_data.get('message'))
+		if status_data.get('estadoDescripcion'):
+			mensaje_partes.append(f"Estado: {status_data.get('estadoDescripcion')}")
+		
+		doc.facturasend_mensaje_estado = ' - '.join(mensaje_partes) if mensaje_partes else estado_fs
+		doc.save(ignore_permissions=True)
+		
+		frappe.db.commit()
+		
+		frappe.log_error(f"Documento {doc_name} actualizado a estado {doc.facturasend_estado}", "FacturaSend Update Status")
+		
+	except Exception as e:
+		frappe.log_error(frappe.get_traceback(), f"Error actualizando estado de {doc_name}")
 
 
 def send_error_notification(documents, error_message):
