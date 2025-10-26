@@ -347,18 +347,32 @@ def convert_document_to_facturasend(doc, settings):
 				# Por ahora usamos valor por defecto
 				pass
 			
+			# Obtener barcode del item
+			barcode = item.item_code  # Default al código del item
+			
+			# Intentar obtener barcode de la tabla Item Barcode
+			if item_doc.barcodes and len(item_doc.barcodes) > 0:
+				barcode = item_doc.barcodes[0].barcode
+			
+			# Para PYG, no usar decimales
+			cantidad = item.qty
+			precio_unitario = item.rate
+			
+			if doc.currency == "PYG":
+				precio_unitario = int(round(item.rate))
+			
 			item_data = {
 				"codigo": item.item_code,
 				"descripcion": item.description or item.item_name,
 				"unidadMedida": 77,  # Unidad por defecto
-				"cantidad": item.qty,
-				"precioUnitario": item.rate,
+				"cantidad": cantidad,
+				"precioUnitario": precio_unitario,
 				"cambio": 0.0,
 				"ivaTipo": iva_tipo,
 				"ivaBase": 100,
 				"iva": iva_tasa,
 				"extras": {
-					"barCode": item_doc.get("barcode") or item.item_code  # Usar barcode de ERPNext o código como fallback
+					"barCode": barcode
 				}
 			}
 			
@@ -379,10 +393,10 @@ def convert_document_to_facturasend(doc, settings):
 		facturasend_doc = {
 			"tipoDocumento": tipo_documento,
 			"establecimiento": int(establecimiento),
-			"punto": punto,
+			"punto": str(punto).zfill(3),  # Asegurar formato "001"
 			"numero": extract_document_number(doc.name),
-			"descripcion": doc.get("facturasend_descripcion", ""),
-			"observacion": doc.get("facturasend_observacion", ""),
+			"descripcion": doc.get("facturasend_descripcion") or "",
+			"observacion": doc.get("facturasend_observacion") or "",
 			"fecha": doc.posting_date.strftime("%Y-%m-%dT%H:%M:%S") if isinstance(doc.posting_date, datetime) else f"{doc.posting_date}T00:00:00",
 			"tipoEmision": extract_number(doc.get("facturasend_tipo_emision", "1")),
 			"tipoTransaccion": extract_number(doc.get("facturasend_tipo_transaccion", "1")),
@@ -418,16 +432,22 @@ def prepare_payment_condition(doc):
 		condicion["tipo"] = 2
 		
 		# La entrega siempre va, aunque sea a crédito
-		# Usar mode_of_payment de la factura o default a Efectivo
 		tipo_pago = 1  # Efectivo por defecto
 		
 		# Verificar si tiene un custom field para modo de pago
 		if hasattr(doc, 'facturasend_modo_pago') and doc.facturasend_modo_pago:
 			tipo_pago = extract_number(doc.facturasend_modo_pago)
 		
+		# Para PYG, monto como string sin decimales
+		monto_entrega = doc.grand_total
+		if doc.currency == "PYG":
+			monto_entrega = str(int(round(doc.grand_total)))
+		else:
+			monto_entrega = str(doc.grand_total)
+		
 		entrega = {
 			"tipo": tipo_pago,
-			"monto": str(int(doc.grand_total)),
+			"monto": monto_entrega,
 			"moneda": doc.currency,
 			"monedaDescripcion": get_currency_description(doc.currency),
 			"cambio": 0.0
@@ -439,31 +459,47 @@ def prepare_payment_condition(doc):
 		cuotas_info = []
 		
 		for cuota in doc.payment_schedule:
+			# Para PYG, montos sin decimales
+			monto_cuota = cuota.payment_amount
+			if doc.currency == "PYG":
+				monto_cuota = int(round(cuota.payment_amount))
+			
 			cuotas_info.append({
 				"moneda": doc.currency,
-				"monto": cuota.payment_amount,
+				"monto": monto_cuota,
 				"vencimiento": cuota.due_date.strftime("%Y-%m-%d") if hasattr(cuota.due_date, 'strftime') else str(cuota.due_date)
 			})
+		
+		# montoEntrega sin decimales para PYG
+		monto_entrega_num = 0.0
+		if doc.currency == "PYG":
+			monto_entrega_num = 0
 		
 		condicion["credito"] = {
 			"tipo": 1,  # Plazo
 			"plazo": f"{total_cuotas} cuotas",
 			"cuotas": total_cuotas,
-			"montoEntrega": 0.0,
+			"montoEntrega": monto_entrega_num,
 			"infoCuotas": cuotas_info
 		}
 	else:
 		# Es contado
-		# Usar mode_of_payment de la factura o default a Efectivo
 		tipo_pago = 1  # Efectivo por defecto
 		
 		# Verificar si tiene un custom field para modo de pago
 		if hasattr(doc, 'facturasend_modo_pago') and doc.facturasend_modo_pago:
 			tipo_pago = extract_number(doc.facturasend_modo_pago)
 		
+		# Para PYG, monto como string sin decimales
+		monto_entrega = doc.grand_total
+		if doc.currency == "PYG":
+			monto_entrega = str(int(round(doc.grand_total)))
+		else:
+			monto_entrega = str(doc.grand_total)
+		
 		entrega = {
 			"tipo": tipo_pago,
-			"monto": str(int(doc.grand_total)),
+			"monto": monto_entrega,
 			"moneda": doc.currency,
 			"monedaDescripcion": get_currency_description(doc.currency),
 			"cambio": 0.0
@@ -807,11 +843,11 @@ def extract_establecimiento_punto(doc_name, settings):
 	
 	if len(parts) >= 3:
 		establecimiento = parts[1]
-		punto = parts[2]
+		punto = str(parts[2]).zfill(3)  # Asegurar formato "001"
 	else:
 		# Usar valores por defecto de la configuración
 		establecimiento = settings.establecimiento
-		punto = settings.punto_expedicion
+		punto = str(settings.punto_expedicion).zfill(3)
 	
 	return establecimiento, punto
 
