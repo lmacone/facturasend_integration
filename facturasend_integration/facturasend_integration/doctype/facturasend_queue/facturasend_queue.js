@@ -8,6 +8,11 @@ frappe.ui.form.on('FacturaSend Queue', {
 			load_pending_documents(frm);
 		});
 
+		// Botón para previsualizar JSON
+		frm.add_custom_button(__('Previsualizar JSON'), function() {
+			preview_json(frm);
+		}, __('Acciones'));
+
 		// Botón para enviar lote
 		frm.add_custom_button(__('Enviar Seleccionados'), function() {
 			send_selected_documents(frm);
@@ -253,6 +258,79 @@ function download_lote_kude(lote_id) {
 		callback: function(r) {
 			if (r.message && r.message.pdf_url) {
 				window.open(r.message.pdf_url, '_blank');
+			}
+		}
+	});
+}
+
+function preview_json(frm) {
+	let selected = [];
+	$('.doc-checkbox:checked').each(function() {
+		selected.push({
+			doctype: $(this).data('doctype'),
+			name: $(this).data('name')
+		});
+	});
+
+	if (selected.length === 0) {
+		frappe.msgprint(__('Por favor seleccione al menos un documento'));
+		return;
+	}
+
+	frappe.call({
+		method: 'facturasend_integration.facturasend_integration.api.preview_facturasend_payload',
+		args: {
+			documents: selected
+		},
+		callback: function(r) {
+			if (r.message && r.message.success) {
+				// Mostrar JSON en un diálogo
+				let d = new frappe.ui.Dialog({
+					title: __('JSON que se enviará a FacturaSend'),
+					fields: [
+						{
+							fieldtype: 'HTML',
+							fieldname: 'json_preview'
+						}
+					],
+					size: 'extra-large'
+				});
+				
+				let html = `
+					<div style="margin-bottom: 10px;">
+						<strong>Documentos procesados:</strong> ${r.message.document_count}
+					</div>
+				`;
+				
+				if (r.message.errors && r.message.errors.length > 0) {
+					html += `
+						<div class="alert alert-warning">
+							<strong>Errores de conversión:</strong><br>
+							${r.message.errors.join('<br>')}
+						</div>
+					`;
+				}
+				
+				html += `
+					<div>
+						<button class="btn btn-xs btn-default" onclick="navigator.clipboard.writeText(this.nextElementSibling.textContent); frappe.show_alert('JSON copiado al portapapeles')">
+							Copiar JSON
+						</button>
+						<pre style="background: #f5f5f5; padding: 10px; border-radius: 4px; max-height: 600px; overflow: auto;">${r.message.payload_json}</pre>
+					</div>
+				`;
+				
+				d.fields_dict.json_preview.$wrapper.html(html);
+				d.show();
+				
+				// También mostrar en consola
+				console.log('FacturaSend Payload:', r.message.payload);
+			} else {
+				frappe.msgprint({
+					title: __('Error'),
+					message: r.message.error || 'Error desconocido',
+					indicator: 'red'
+				});
 			}
 		}
 	});

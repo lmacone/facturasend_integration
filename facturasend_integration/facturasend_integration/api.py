@@ -10,6 +10,48 @@ from frappe.utils import get_datetime, now_datetime, getdate
 
 
 @frappe.whitelist()
+def preview_facturasend_payload(documents):
+	"""Previsualiza el JSON que se enviará a FacturaSend SIN enviarlo"""
+	
+	if isinstance(documents, str):
+		documents = json.loads(documents)
+	
+	try:
+		settings = get_facturasend_settings()
+		
+		# Preparar datos para FacturaSend
+		batch_data = []
+		errors = []
+		
+		for doc_info in documents:
+			try:
+				doc = frappe.get_doc("Sales Invoice", doc_info['name'])
+				fs_data = convert_document_to_facturasend(doc, settings)
+				if fs_data:
+					batch_data.append(fs_data)
+				else:
+					errors.append(f"{doc.name}: Conversión retornó None")
+			except Exception as e:
+				errors.append(f"{doc.name}: {str(e)}")
+				frappe.log_error(frappe.get_traceback(), f"Preview Error {doc.name}")
+		
+		return {
+			"success": True,
+			"payload": batch_data,
+			"payload_json": json.dumps(batch_data, indent=2, ensure_ascii=False),
+			"errors": errors,
+			"document_count": len(batch_data)
+		}
+		
+	except Exception as e:
+		frappe.log_error(frappe.get_traceback(), "Preview Payload Error")
+		return {
+			"success": False,
+			"error": str(e)
+		}
+
+
+@frappe.whitelist()
 def get_pending_documents(tipo_documento=None, desde_fecha=None, hasta_fecha=None):
 	"""Obtiene lista de documentos pendientes de enviar a FacturaSend"""
 	
