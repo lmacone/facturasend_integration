@@ -170,10 +170,15 @@ function send_selected_documents(frm) {
 						load_pending_documents(frm);
 						
 						// Descargar KUDEs automáticamente si hay CDCs
+						// Esperar más tiempo para que FacturaSend procese los XML
 						if (r.message.cdcs && r.message.cdcs.length > 0) {
+							frappe.show_alert({
+								message: __('Los KUDEs se descargarán automáticamente en 5 segundos...'),
+								indicator: 'blue'
+							});
 							setTimeout(function() {
 								download_kude_by_cdcs(r.message.cdcs);
-							}, 1000);
+							}, 5000);
 						}
 					} else {
 						// Construir mensaje de error detallado
@@ -395,8 +400,22 @@ function download_kude_by_cdcs(cdcs) {
 		callback: function(r) {
 			if (r.message && r.message.pdf_url) {
 				window.open(r.message.pdf_url, '_blank');
+				frappe.show_alert({
+					message: __('KUDEs descargados exitosamente'),
+					indicator: 'green'
+				});
 			} else if (r.message && r.message.error) {
-				frappe.msgprint(__('Error al descargar KUDE: ') + r.message.error);
+				// Mostrar error más amigable
+				let error_msg = r.message.error;
+				if (error_msg.includes('No se encontraron')) {
+					frappe.msgprint({
+						title: __('KUDEs no disponibles aún'),
+						message: __('Los documentos electrónicos aún se están procesando en FacturaSend. Por favor intente descargar los KUDEs manualmente en unos momentos usando el botón "Descargar KUDEs".'),
+						indicator: 'orange'
+					});
+				} else {
+					frappe.msgprint(__('Error al descargar KUDEs: ') + error_msg);
+				}
 			}
 		}
 	});
