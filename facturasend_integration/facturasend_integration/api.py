@@ -65,18 +65,15 @@ def get_pending_documents(tipo_documento=None, desde_fecha=None, hasta_fecha=Non
 	
 	# Sales Invoices (facturas normales)
 	if not tipo_documento or tipo_documento == "Sales Invoice":
-		filters = {
-			"docstatus": 1,
-			"is_return": 0
-		}
+		filters = [
+			["Sales Invoice", "docstatus", "=", 1],
+			["Sales Invoice", "is_return", "=", 0]
+		]
+		
 		if desde_fecha:
-			filters["posting_date"] = [">=", desde_fecha]
+			filters.append(["Sales Invoice", "posting_date", ">=", desde_fecha])
 		if hasta_fecha:
-			if desde_fecha:
-				# Si desde_fecha está en filters, necesitamos modificar el filtro
-				filters["posting_date"] = [[">=", desde_fecha], ["<=", hasta_fecha]]
-			else:
-				filters["posting_date"] = ["<=", hasta_fecha]
+			filters.append(["Sales Invoice", "posting_date", "<=", hasta_fecha])
 		
 		try:
 			invoices = frappe.get_all("Sales Invoice",
@@ -110,15 +107,15 @@ def get_pending_documents(tipo_documento=None, desde_fecha=None, hasta_fecha=Non
 	
 	# Credit Notes
 	if not tipo_documento or tipo_documento == "Credit Note":
-		filters = {
-			"docstatus": 1,
-			"is_return": 1,
-			"is_debit_note": 0
-		}
+		filters = [
+			["Sales Invoice", "docstatus", "=", 1],
+			["Sales Invoice", "is_return", "=", 1],
+			["Sales Invoice", "is_debit_note", "=", 0]
+		]
 		if desde_fecha:
-			filters["posting_date"] = [">=", desde_fecha]
+			filters.append(["Sales Invoice", "posting_date", ">=", desde_fecha])
 		if hasta_fecha:
-			filters["posting_date"] = ["<=", hasta_fecha]
+			filters.append(["Sales Invoice", "posting_date", "<=", hasta_fecha])
 		
 		credit_notes = frappe.get_all("Sales Invoice",
 			filters=filters,
@@ -133,14 +130,14 @@ def get_pending_documents(tipo_documento=None, desde_fecha=None, hasta_fecha=Non
 	
 	# Debit Notes
 	if not tipo_documento or tipo_documento == "Debit Note":
-		filters = {
-			"docstatus": 1,
-			"is_debit_note": 1
-		}
+		filters = [
+			["Sales Invoice", "docstatus", "=", 1],
+			["Sales Invoice", "is_debit_note", "=", 1]
+		]
 		if desde_fecha:
-			filters["posting_date"] = [">=", desde_fecha]
+			filters.append(["Sales Invoice", "posting_date", ">=", desde_fecha])
 		if hasta_fecha:
-			filters["posting_date"] = ["<=", hasta_fecha]
+			filters.append(["Sales Invoice", "posting_date", "<=", hasta_fecha])
 		
 		debit_notes = frappe.get_all("Sales Invoice",
 			filters=filters,
