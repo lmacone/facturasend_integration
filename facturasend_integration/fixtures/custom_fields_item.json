@@ -1,5 +1,6 @@
 [
 	{
+		"doctype": "Custom Field",
 		"dt": "Item",
 		"fieldname": "facturasend_section",
 		"fieldtype": "Section Break",
@@ -8,6 +9,7 @@
 		"collapsible": 1
 	},
 	{
+		"doctype": "Custom Field",
 		"dt": "Item",
 		"fieldname": "facturasend_barcode",
 		"fieldtype": "Data",
@@ -15,6 +17,7 @@
 		"insert_after": "facturasend_section"
 	},
 	{
+		"doctype": "Custom Field",
 		"dt": "Item",
 		"fieldname": "facturasend_ncm",
 		"fieldtype": "Data",

@@ -1,5 +1,6 @@
 [
 	{
+		"doctype": "Custom Field",
 		"dt": "User",
 		"fieldname": "facturasend_section",
 		"fieldtype": "Section Break",
@@ -8,6 +9,7 @@
 		"collapsible": 1
 	},
 	{
+		"doctype": "Custom Field",
 		"dt": "User",
 		"fieldname": "facturasend_documento_tipo",
 		"fieldtype": "Select",
@@ -17,6 +19,7 @@
 		"insert_after": "facturasend_section"
 	},
 	{
+		"doctype": "Custom Field",
 		"dt": "User",
 		"fieldname": "facturasend_documento_numero",
 		"fieldtype": "Data",
@@ -24,12 +27,14 @@
 		"insert_after": "facturasend_documento_tipo"
 	},
 	{
+		"doctype": "Custom Field",
 		"dt": "User",
 		"fieldname": "column_break_fs1",
 		"fieldtype": "Column Break",
 		"insert_after": "facturasend_documento_numero"
 	},
 	{
+		"doctype": "Custom Field",
 		"dt": "User",
 		"fieldname": "facturasend_cargo",
 		"fieldtype": "Data",
