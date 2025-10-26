@@ -768,7 +768,6 @@ def download_kude_by_cdc(cdcs):
 		
 		payload = {
 			"cdcList": cdc_list,
-			"type": "base64",
 			"format": "a4"
 		}
 		
@@ -776,14 +775,14 @@ def download_kude_by_cdc(cdcs):
 		
 		response = requests.post(url, json=payload, headers=headers, timeout=30)
 		
-		frappe.log_error(f"Status: {response.status_code}\nResponse: {response.text[:500]}", "FacturaSend KUDE by CDC Response")
+		frappe.log_error(f"Status: {response.status_code}\nContent-Type: {response.headers.get('Content-Type', 'N/A')}\nContent-Length: {len(response.content)}", "FacturaSend KUDE by CDC Response")
 		
 		if response.status_code == 200:
-			response_data = response.json()
-			
-			# Con type="base64", la respuesta viene en formato JSON con el PDF en base64
-			if response_data.get('success') and response_data.get('result'):
-				pdf_base64 = response_data['result']
+			# La respuesta viene directamente como PDF binario
+			content_type = response.headers.get('Content-Type', '')
+			if 'application/pdf' in content_type or len(response.content) > 0:
+				import base64
+				pdf_base64 = base64.b64encode(response.content).decode()
 				
 				return {
 					"success": True,
@@ -791,9 +790,15 @@ def download_kude_by_cdc(cdcs):
 					"pdf_url": f"data:application/pdf;base64,{pdf_base64}"
 				}
 			else:
-				error_msg = response_data.get('error', 'Error desconocido')
-				frappe.log_error(f"Response error: {response.text[:500]}", "FacturaSend KUDE by CDC Error")
-				return {"success": False, "error": error_msg}
+				# Si no es PDF, intentar parsear como JSON para ver si hay error
+				try:
+					response_data = response.json()
+					error_msg = response_data.get('error', 'Error desconocido')
+					frappe.log_error(f"Response error: {response.text[:500]}", "FacturaSend KUDE by CDC Error")
+					return {"success": False, "error": error_msg}
+				except:
+					frappe.log_error(f"Response no es PDF: {response.text[:500]}", "FacturaSend KUDE by CDC Error")
+					return {"success": False, "error": f"La respuesta no es un PDF válido: {response.text[:200]}"}
 		else:
 			return {"success": False, "error": f"Error al descargar KUDEs: {response.text}"}
 			
@@ -839,7 +844,6 @@ def download_batch_kude(documents):
 		
 		payload = {
 			"cdcList": cdc_list,
-			"type": "base64",
 			"format": "a4"
 		}
 		
@@ -847,14 +851,14 @@ def download_batch_kude(documents):
 		
 		response = requests.post(url, json=payload, headers=headers, timeout=30)
 		
-		frappe.log_error(f"Status: {response.status_code}\nResponse: {response.text[:500]}", "FacturaSend KUDE Response")
+		frappe.log_error(f"Status: {response.status_code}\nContent-Type: {response.headers.get('Content-Type', 'N/A')}\nContent-Length: {len(response.content)}", "FacturaSend KUDE Response")
 		
 		if response.status_code == 200:
-			response_data = response.json()
-			
-			# Con type="base64", la respuesta viene en formato JSON con el PDF en base64
-			if response_data.get('success') and response_data.get('result'):
-				pdf_base64 = response_data['result']
+			# La respuesta viene directamente como PDF binario
+			content_type = response.headers.get('Content-Type', '')
+			if 'application/pdf' in content_type or len(response.content) > 0:
+				import base64
+				pdf_base64 = base64.b64encode(response.content).decode()
 				
 				return {
 					"success": True,
@@ -862,9 +866,15 @@ def download_batch_kude(documents):
 					"pdf_url": f"data:application/pdf;base64,{pdf_base64}"
 				}
 			else:
-				error_msg = response_data.get('error', 'Error desconocido')
-				frappe.log_error(f"Response error: {response.text[:500]}", "FacturaSend KUDE Error")
-				return {"success": False, "error": error_msg}
+				# Si no es PDF, intentar parsear como JSON para ver si hay error
+				try:
+					response_data = response.json()
+					error_msg = response_data.get('error', 'Error desconocido')
+					frappe.log_error(f"Response error: {response.text[:500]}", "FacturaSend KUDE Error")
+					return {"success": False, "error": error_msg}
+				except:
+					frappe.log_error(f"Response no es PDF: {response.text[:500]}", "FacturaSend KUDE Error")
+					return {"success": False, "error": f"La respuesta no es un PDF válido: {response.text[:200]}"}
 		else:
 			return {"success": False, "error": f"Error al descargar KUDEs: {response.text}"}
 			
