@@ -10,6 +10,35 @@ from frappe.utils import get_datetime, now_datetime, getdate
 
 
 @frappe.whitelist()
+def reset_document_retries(documents):
+	"""Resetea el contador de reintentos de documentos con error"""
+	
+	if isinstance(documents, str):
+		documents = json.loads(documents)
+	
+	try:
+		for doc_info in documents:
+			doc = frappe.get_doc("Sales Invoice", doc_info['name'])
+			doc.facturasend_reintentos = 0
+			doc.facturasend_estado = "Pendiente"
+			doc.facturasend_mensaje_estado = "Reintentos reseteados - Listo para reenviar"
+			doc.save(ignore_permissions=True)
+		
+		frappe.db.commit()
+		
+		return {
+			"success": True,
+			"message": f"Se resetearon {len(documents)} documentos"
+		}
+	except Exception as e:
+		frappe.log_error(frappe.get_traceback(), "Error reseteando reintentos")
+		return {
+			"success": False,
+			"error": str(e)
+		}
+
+
+@frappe.whitelist()
 def preview_facturasend_payload(documents):
 	"""Previsualiza el JSON que se enviará a FacturaSend SIN enviarlo"""
 	
@@ -278,6 +307,18 @@ def convert_document_to_facturasend(doc, settings):
 		# Convertir contribuyente a boolean
 		es_contribuyente = customer.get("facturasend_contribuyente", 1) == 1 or customer.get("facturasend_contribuyente", 1) == True
 		
+		# Generar código del cliente (3-15 caracteres)
+		# Si es contribuyente, usar RUC sin guión
+		# Si no, usar hash del nombre o documento
+		if es_contribuyente and customer.get("facturasend_ruc"):
+			codigo_cliente = customer.get("facturasend_ruc", "").replace("-", "")[:15]
+		elif customer.get("facturasend_documento_numero"):
+			codigo_cliente = customer.get("facturasend_documento_numero", "")[:15]
+		else:
+			# Usar hash del nombre (primeros 10 caracteres)
+			import hashlib
+			codigo_cliente = hashlib.md5(customer.name.encode()).hexdigest()[:10]
+		
 		cliente_data = {
 			"contribuyente": es_contribuyente,  # Boolean, no int
 			"razonSocial": customer.customer_name,
@@ -289,7 +330,7 @@ def convert_document_to_facturasend(doc, settings):
 			"telefono": contact.get("phone", "") if contact else "",
 			"celular": contact.get("mobile_no", "") if contact else "",
 			"email": contact.get("email_id", "") if contact else "",
-			"codigo": customer.name  # ID del cliente de ERPNext
+			"codigo": codigo_cliente
 		}
 		
 		# documentoTipo y documentoNumero solo si NO es contribuyente

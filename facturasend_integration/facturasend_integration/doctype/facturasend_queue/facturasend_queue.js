@@ -17,6 +17,11 @@ frappe.ui.form.on('FacturaSend Queue', {
 		frm.add_custom_button(__('Enviar Seleccionados'), function() {
 			send_selected_documents(frm);
 		}, __('Acciones'));
+		
+		// Botón para resetear reintentos
+		frm.add_custom_button(__('Resetear Reintentos'), function() {
+			reset_retries(frm);
+		}, __('Acciones'));
 
 		// Botón para descargar KUDEs
 		frm.add_custom_button(__('Descargar KUDEs'), function() {
@@ -334,4 +339,43 @@ function preview_json(frm) {
 			}
 		}
 	});
+}
+
+function reset_retries(frm) {
+	// Obtener documentos seleccionados
+	let selected = get_selected_documents();
+	
+	if (selected.length === 0) {
+		frappe.msgprint(__('Por favor seleccione al menos un documento'));
+		return;
+	}
+	
+	frappe.confirm(
+		`¿Está seguro de resetear los reintentos de ${selected.length} documento(s)?`,
+		function() {
+			frappe.call({
+				method: 'facturasend_integration.facturasend_integration.api.reset_document_retries',
+				args: {
+					documents: selected
+				},
+				callback: function(r) {
+					if (r.message.success) {
+						frappe.show_alert({
+							message: r.message.message,
+							indicator: 'green'
+						});
+						
+						// Recargar documentos
+						load_pending_documents(frm);
+					} else {
+						frappe.msgprint({
+							title: __('Error'),
+							message: r.message.error,
+							indicator: 'red'
+						});
+					}
+				}
+			});
+		}
+	);
 }
