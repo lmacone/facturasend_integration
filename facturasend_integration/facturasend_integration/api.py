@@ -400,10 +400,21 @@ def send_to_facturasend_api(batch_data, settings):
 	try:
 		url = f"{settings.base_url}/{settings.tenant_id}/lote/create"
 		
+		# Obtener API key
+		api_key = settings.get_password('api_key')
+		if not api_key:
+			return {
+				"success": False,
+				"error": "API Key no configurado en FacturaSend Settings"
+			}
+		
 		headers = {
-			"Authorization": f"Bearer {settings.get_password('api_key')}",
+			"Authorization": f"Bearer {api_key}",
 			"Content-Type": "application/json"
 		}
+		
+		frappe.log_error(f"Enviando a URL: {url}", "FacturaSend Debug")
+		frappe.log_error(f"Datos: {json.dumps(batch_data[:1])}", "FacturaSend Debug")  # Solo primer documento
 		
 		response = requests.post(url, json=batch_data, headers=headers, timeout=30)
 		
@@ -416,6 +427,7 @@ def send_to_facturasend_api(batch_data, settings):
 			}
 			
 	except Exception as e:
+		frappe.log_error(frappe.get_traceback(), "FacturaSend API Error")
 		return {
 			"success": False,
 			"error": str(e)
@@ -501,8 +513,12 @@ def download_batch_kude(documents):
 		# Llamar a la API para obtener PDFs
 		url = f"{settings.base_url}/{settings.tenant_id}/kude"
 		
+		api_key = settings.get_password('api_key')
+		if not api_key:
+			return {"success": False, "error": "API Key no configurado"}
+		
 		headers = {
-			"Authorization": f"Bearer {settings.get_password('api_key')}"
+			"Authorization": f"Bearer {api_key}"
 		}
 		
 		params = {
@@ -538,8 +554,12 @@ def download_lote_kude(lote_id):
 		
 		url = f"{settings.base_url}/{settings.tenant_id}/lote/{lote_id}/kude"
 		
+		api_key = settings.get_password('api_key')
+		if not api_key:
+			return {"success": False, "error": "API Key no configurado"}
+		
 		headers = {
-			"Authorization": f"Bearer {settings.get_password('api_key')}"
+			"Authorization": f"Bearer {api_key}"
 		}
 		
 		response = requests.get(url, headers=headers, timeout=30)
@@ -605,8 +625,12 @@ def get_lote_status(lote_id, settings):
 	try:
 		url = f"{settings.base_url}/{settings.tenant_id}/lote/{lote_id}/consulta"
 		
+		api_key = settings.get_password('api_key')
+		if not api_key:
+			return {"success": False, "error": "API Key no configurado"}
+		
 		headers = {
-			"Authorization": f"Bearer {settings.get_password('api_key')}"
+			"Authorization": f"Bearer {api_key}"
 		}
 		
 		response = requests.get(url, headers=headers, timeout=30)
