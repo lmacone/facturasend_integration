@@ -4,13 +4,13 @@ build-backend = "flit_core.buildapi"
 
 [project]
 name = "facturasend_integration"
+version = "0.0.1"
 authors = [
     {name = "Luis", email = "luis@example.com"}
 ]
 description = "Integración de FacturaSend Paraguay con ERPNext para facturación electrónica"
 requires-python = ">=3.10"
 readme = "README.md"
-dynamic = ["version"]
 dependencies = [
     "frappe",
     "requests"
