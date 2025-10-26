@@ -259,10 +259,21 @@ def send_batch_to_facturasend(documents):
 			# Actualizar documentos
 			update_documents_after_send(documents, response, log.name)
 			
+			# Obtener CDCs de los documentos enviados
+			cdcs = []
+			de_list = response['result'].get('deList', [])
+			for i, doc_info in enumerate(documents):
+				if i < len(de_list):
+					cdc = de_list[i].get('cdc', '')
+					if cdc:
+						cdcs.append(cdc)
+			
 			return {
 				"success": True, 
 				"lote_id": response['result'].get('loteId'),
-				"log_name": log.name
+				"log_name": log.name,
+				"cdcs": cdcs,
+				"document_names": [doc['name'] for doc in documents]
 			}
 		else:
 			# Actualizar documentos con error
@@ -714,10 +725,10 @@ def update_documents_after_send(documents, response, log_name):
 		if i < len(de_list):
 			de_info = de_list[i]
 			doc.facturasend_cdc = de_info.get('cdc', '')
-			doc.facturasend_estado = "Enviado"  # Estado 0 = Generado DE - Documento generado exitosamente
+			doc.facturasend_estado = "Generado DE"  # Estado 0 - Documento generado exitosamente en FacturaSend
 			doc.facturasend_lote_id = str(lote_id)
 			doc.facturasend_fecha_envio = now_datetime()
-			doc.facturasend_mensaje_estado = f"Generado DE (Estado 0) - CDC: {de_info.get('cdc', '')}"
+			doc.facturasend_mensaje_estado = f"Documento generado exitosamente. CDC: {de_info.get('cdc', '')}"
 		else:
 			doc.facturasend_estado = "Error"
 			doc.facturasend_mensaje_estado = "No se recibió respuesta del servidor"
@@ -725,6 +736,65 @@ def update_documents_after_send(documents, response, log_name):
 		doc.save(ignore_permissions=True)
 	
 	frappe.db.commit()
+
+
+@frappe.whitelist()
+def download_kude_by_cdc(cdcs):
+	"""Descarga los KUDEs directamente usando una lista de CDCs"""
+	
+	if isinstance(cdcs, str):
+		cdcs = json.loads(cdcs)
+	
+	try:
+		settings = get_facturasend_settings()
+		
+		if not cdcs or len(cdcs) == 0:
+			return {"success": False, "error": "No se proporcionaron CDCs"}
+		
+		# Llamar a la API para obtener PDFs
+		url = f"{settings.base_url}/{settings.tenant_id}/de/pdf"
+		
+		api_key = settings.get_password('api_key')
+		if not api_key:
+			return {"success": False, "error": "API Key no configurado"}
+		
+		headers = {
+			"Authorization": f"Bearer {api_key}",
+			"Content-Type": "application/json"
+		}
+		
+		payload = {
+			"cdcList": cdcs,
+			"type": "a4"
+		}
+		
+		frappe.log_error(f"POST {url}\nPayload: {json.dumps(payload, indent=2)}", "FacturaSend KUDE by CDC Request")
+		
+		response = requests.post(url, json=payload, headers=headers, timeout=30)
+		
+		frappe.log_error(f"Status: {response.status_code}\nContent-Type: {response.headers.get('Content-Type', 'N/A')}\nContent-Length: {len(response.content)}", "FacturaSend KUDE by CDC Response")
+		
+		if response.status_code == 200:
+			# Verificar que es un PDF
+			content_type = response.headers.get('Content-Type', '')
+			if 'application/pdf' in content_type or len(response.content) > 0:
+				import base64
+				pdf_content = base64.b64encode(response.content).decode()
+				
+				return {
+					"success": True,
+					"pdf_content": pdf_content,
+					"pdf_url": f"data:application/pdf;base64,{pdf_content}"
+				}
+			else:
+				frappe.log_error(f"Response no es PDF: {response.text[:500]}", "FacturaSend KUDE by CDC Error")
+				return {"success": False, "error": f"La respuesta no es un PDF válido: {response.text[:200]}"}
+		else:
+			return {"success": False, "error": f"Error al descargar KUDEs: {response.text}"}
+			
+	except Exception as e:
+		frappe.log_error(frappe.get_traceback(), "Error descargando KUDEs por CDC")
+		return {"success": False, "error": str(e)}
 
 
 @frappe.whitelist()
@@ -760,91 +830,40 @@ def download_batch_kude(documents):
 		}
 		
 		# Enviar CDCs en el body como array
+		# type: "ticket" (por defecto), "a4", o "base64"
+		# format: opcional, si type="ticket" puede ser "a4"
 		payload = {
-			"cdcList": cdcs
+			"cdcList": cdcs,
+			"type": "a4"
 		}
 		
 		frappe.log_error(f"POST {url}\nPayload: {json.dumps(payload, indent=2)}", "FacturaSend KUDE Request")
 		
 		response = requests.post(url, json=payload, headers=headers, timeout=30)
 		
-		frappe.log_error(f"Status: {response.status_code}\nResponse: {response.text[:500]}", "FacturaSend KUDE Response")
+		frappe.log_error(f"Status: {response.status_code}\nContent-Type: {response.headers.get('Content-Type', 'N/A')}\nContent-Length: {len(response.content)}", "FacturaSend KUDE Response")
 		
 		if response.status_code == 200:
-			# Guardar PDF temporalmente y retornar URL
-			import base64
-			pdf_content = base64.b64encode(response.content).decode()
-			
-			return {
-				"success": True,
-				"pdf_content": pdf_content,
-				"pdf_url": f"data:application/pdf;base64,{pdf_content}"
-			}
+			# Verificar que es un PDF
+			content_type = response.headers.get('Content-Type', '')
+			if 'application/pdf' in content_type or len(response.content) > 0:
+				# Guardar PDF y retornar como base64
+				import base64
+				pdf_content = base64.b64encode(response.content).decode()
+				
+				return {
+					"success": True,
+					"pdf_content": pdf_content,
+					"pdf_url": f"data:application/pdf;base64,{pdf_content}"
+				}
+			else:
+				frappe.log_error(f"Response no es PDF: {response.text[:500]}", "FacturaSend KUDE Error")
+				return {"success": False, "error": f"La respuesta no es un PDF válido: {response.text[:200]}"}
 		else:
 			return {"success": False, "error": f"Error al descargar KUDEs: {response.text}"}
 			
 	except Exception as e:
 		frappe.log_error(frappe.get_traceback(), "Error descargando KUDEs")
-		return {"success": False, "error": str(e)}
-
-
-@frappe.whitelist()
-def download_lote_kude(lote_id):
-	"""Descarga el PDF del KUDE de un lote completo"""
-	
-	try:
-		settings = get_facturasend_settings()
-		
-		# Obtener CDCs de todos los documentos del lote
-		docs = frappe.get_all("Sales Invoice",
-			filters={
-				"facturasend_lote_id": lote_id,
-				"facturasend_cdc": ["!=", ""]
-			},
-			fields=["facturasend_cdc"]
-		)
-		
-		if not docs:
-			return {"success": False, "error": "No se encontraron documentos con CDC para este lote"}
-		
-		cdcs = [doc.facturasend_cdc for doc in docs]
-		
-		# Usar el endpoint POST /de/pdf según documentación
-		url = f"{settings.base_url}/{settings.tenant_id}/de/pdf"
-		
-		api_key = settings.get_password('api_key')
-		if not api_key:
-			return {"success": False, "error": "API Key no configurado"}
-		
-		headers = {
-			"Authorization": f"Bearer {api_key}",
-			"Content-Type": "application/json"
-		}
-		
-		payload = {
-			"cdcList": cdcs
-		}
-		
-		frappe.log_error(f"POST {url}\nLote: {lote_id}\nCDCs: {len(cdcs)}", "FacturaSend Lote KUDE Request")
-		
-		response = requests.post(url, json=payload, headers=headers, timeout=30)
-		
-		frappe.log_error(f"Status: {response.status_code}", "FacturaSend Lote KUDE Response")
-		
-		if response.status_code == 200:
-			import base64
-			pdf_content = base64.b64encode(response.content).decode()
-			
-			return {
-				"success": True,
-				"pdf_content": pdf_content,
-				"pdf_url": f"data:application/pdf;base64,{pdf_content}"
-			}
-		else:
-			return {"success": False, "error": f"Error al descargar KUDE del lote: {response.text}"}
-			
-	except Exception as e:
-		frappe.log_error(frappe.get_traceback(), "Error descargando KUDE del lote")
 		return {"success": False, "error": str(e)}
 
 
@@ -858,11 +877,11 @@ def check_document_status():
 			frappe.log_error("No se encontró FacturaSend Settings", "FacturaSend Status Check")
 			return
 		
-		# Buscar documentos con estado "Enviado" (Estado 0 = Generado DE) que necesitan actualización
+		# Buscar documentos con estado "Generado DE" (Estado 0) que necesitan actualización
 		pending_docs = frappe.get_all("Sales Invoice",
 			filters={
 				"docstatus": 1,
-				"facturasend_estado": ["in", ["Enviado"]],
+				"facturasend_estado": ["in", ["Generado DE"]],
 				"facturasend_cdc": ["!=", ""]
 			},
 			fields=["name", "facturasend_cdc"],
@@ -958,36 +977,32 @@ def update_single_document_status(doc_name, status_data):
 		
 		doc = frappe.get_doc("Sales Invoice", doc_name)
 		
-		# Mapear estado de FacturaSend a estados permitidos en ERPNext
-		# Estados permitidos: "", "Pendiente", "Enviado", "Aprobado", "Rechazado", "Error"
+		# Mapear estado de FacturaSend a nuestros estados
 		estado_fs = str(status_data.get('estado', '0'))
 		
 		if estado_fs == '2':
 			doc.facturasend_estado = 'Aprobado'
 		elif estado_fs == '3':
-			doc.facturasend_estado = 'Aprobado'  # Aprobado con observación también es Aprobado
+			doc.facturasend_estado = 'Aprobado con observación'
 		elif estado_fs == '4':
 			doc.facturasend_estado = 'Rechazado'
 		elif estado_fs == '1':
-			doc.facturasend_estado = 'Enviado'  # Enviado en Lote
+			doc.facturasend_estado = 'Enviado en Lote'
 		elif estado_fs == '0':
-			doc.facturasend_estado = 'Enviado'  # Generado DE - mantener como Enviado
+			doc.facturasend_estado = 'Generado DE'  # Mantener como Generado DE
 		elif estado_fs == '99':
-			doc.facturasend_estado = 'Error'  # Cancelado -> Error
+			doc.facturasend_estado = 'Cancelado'
 		elif estado_fs == '88':
-			doc.facturasend_estado = 'Error'  # Inexistente -> Error
+			doc.facturasend_estado = 'Error'  # Inexistente
 		else:
-			doc.facturasend_estado = 'Enviado'  # Default
+			doc.facturasend_estado = 'Generado DE'  # Default
 		
 		# Actualizar mensaje con la información del estado
 		mensaje_partes = []
 		if status_data.get('message'):
 			mensaje_partes.append(status_data.get('message'))
 		if status_data.get('estadoDescripcion'):
-			mensaje_partes.append(f"{status_data.get('estadoDescripcion')}")
-		
-		# Agregar código de estado para referencia
-		mensaje_partes.append(f"(Estado FS: {estado_fs})")
+			mensaje_partes.append(status_data.get('estadoDescripcion'))
 		
 		doc.facturasend_mensaje_estado = ' - '.join(mensaje_partes) if mensaje_partes else f"Estado {estado_fs}"
 		doc.save(ignore_permissions=True)

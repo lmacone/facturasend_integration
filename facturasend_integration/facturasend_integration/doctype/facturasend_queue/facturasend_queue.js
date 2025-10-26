@@ -169,9 +169,11 @@ function send_selected_documents(frm) {
 						frappe.msgprint(__('Documentos enviados exitosamente'));
 						load_pending_documents(frm);
 						
-						// Descargar KUDEs automáticamente
-						if (r.message.lote_id) {
-							download_lote_kude(r.message.lote_id);
+						// Descargar KUDEs automáticamente si hay CDCs
+						if (r.message.cdcs && r.message.cdcs.length > 0) {
+							setTimeout(function() {
+								download_kude_by_cdcs(r.message.cdcs);
+							}, 1000);
 						}
 					} else {
 						// Construir mensaje de error detallado
@@ -267,20 +269,6 @@ function download_kudes(frm) {
 				window.open(r.message.pdf_url, '_blank');
 			} else {
 				frappe.msgprint(__('Error al descargar KUDEs: ') + (r.message.error || 'Error desconocido'));
-			}
-		}
-	});
-}
-
-function download_lote_kude(lote_id) {
-	frappe.call({
-		method: 'facturasend_integration.facturasend_integration.api.download_lote_kude',
-		args: {
-			lote_id: lote_id
-		},
-		callback: function(r) {
-			if (r.message && r.message.pdf_url) {
-				window.open(r.message.pdf_url, '_blank');
 			}
 		}
 	});
@@ -386,14 +374,30 @@ function reset_retries(frm) {
 						// Recargar documentos
 						load_pending_documents(frm);
 					} else {
-						frappe.msgprint({
-							title: __('Error'),
-							message: r.message.error,
-							indicator: 'red'
-						});
-					}
+					frappe.msgprint({
+						title: __('Error'),
+						message: r.message.error,
+						indicator: 'red'
+					});
 				}
-			});
+			}
+		});
+	}
+);
+}
+
+function download_kude_by_cdcs(cdcs) {
+	frappe.call({
+		method: 'facturasend_integration.facturasend_integration.api.download_kude_by_cdc',
+		args: {
+			cdcs: cdcs
+		},
+		callback: function(r) {
+			if (r.message && r.message.pdf_url) {
+				window.open(r.message.pdf_url, '_blank');
+			} else if (r.message && r.message.error) {
+				frappe.msgprint(__('Error al descargar KUDE: ') + r.message.error);
+			}
 		}
-	);
+	});
 }

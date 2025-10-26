@@ -58,10 +58,6 @@ facturasend_integration/
    - Descarga KUDEs en PDF de múltiples documentos
    - Retorna PDF en base64
 
-4. `download_lote_kude(lote_id)`
-   - Descarga KUDE completo de un lote
-   - Retorna PDF en base64
-
 **Funciones Internas:**
 
 1. `convert_document_to_facturasend(doc, settings)`

@@ -284,25 +284,6 @@ else:
     print(f"Error: {result['error']}")
 ```
 
-### 2. Descargar KUDE de Lote Completo
-
-```python
-from facturasend_integration.facturasend_integration.api import download_lote_kude
-import base64
-
-lote_id = "22"
-
-result = download_lote_kude(lote_id)
-
-if result['success']:
-    pdf_data = base64.b64decode(result['pdf_content'])
-    with open(f'kude_lote_{lote_id}.pdf', 'wb') as f:
-        f.write(pdf_data)
-    print(f"KUDE del lote {lote_id} descargado")
-else:
-    print(f"Error: {result['error']}")
-```
-
 ## Consultas Útiles
 
 ### 1. Documentos por Estado

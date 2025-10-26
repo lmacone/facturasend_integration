@@ -81,7 +81,6 @@ El corazón de la integración. Contiene:
 - `get_pending_documents()` - Lista documentos pendientes
 - `send_batch_to_facturasend()` - Envía lote a FacturaSend
 - `download_batch_kude()` - Descarga KUDEs de documentos
-- `download_lote_kude()` - Descarga KUDE de lote completo
 
 **Funciones Internas:**
 - `convert_document_to_facturasend()` - Mapea ERPNext → FacturaSend

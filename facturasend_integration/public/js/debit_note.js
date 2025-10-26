@@ -39,9 +39,10 @@ function send_debit_note_to_facturasend(frm) {
 						frappe.msgprint(__('Nota de Débito enviada exitosamente a FacturaSend'));
 						frm.reload_doc();
 						
-						if (r.message.lote_id) {
+						// Descargar KUDE automáticamente si hay CDCs
+						if (r.message.cdcs && r.message.cdcs.length > 0) {
 							setTimeout(function() {
-								download_lote_kude(r.message.lote_id);
+								download_kude_by_cdcs(r.message.cdcs);
 							}, 1000);
 						}
 					} else {
@@ -72,15 +73,17 @@ function download_kude(frm) {
 	});
 }
 
-function download_lote_kude(lote_id) {
+function download_kude_by_cdcs(cdcs) {
 	frappe.call({
-		method: 'facturasend_integration.facturasend_integration.api.download_lote_kude',
+		method: 'facturasend_integration.facturasend_integration.api.download_kude_by_cdc',
 		args: {
-			lote_id: lote_id
+			cdcs: cdcs
 		},
 		callback: function(r) {
 			if (r.message && r.message.pdf_url) {
 				window.open(r.message.pdf_url, '_blank');
+			} else if (r.message && r.message.error) {
+				frappe.msgprint(__('Error al descargar KUDE: ') + r.message.error);
 			}
 		}
 	});
