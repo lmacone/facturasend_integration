@@ -16,6 +16,7 @@
 		"fieldtype": "Data",
 		"label": "CDC",
 		"read_only": 1,
+		"allow_on_submit": 1,
 		"insert_after": "facturasend_section",
 		"length": 44
 	},
@@ -28,6 +29,7 @@
 		"label": "Estado FacturaSend",
 		"options": "\nPendiente\nEnviado\nAprobado\nRechazado\nError",
 		"read_only": 1,
+		"allow_on_submit": 1,
 		"insert_after": "facturasend_cdc"
 	},
 	{
@@ -46,6 +48,7 @@
 		"fieldtype": "Data",
 		"label": "Lote ID",
 		"read_only": 1,
+		"allow_on_submit": 1,
 		"insert_after": "column_break_fs1"
 	},
 	{
@@ -56,6 +59,7 @@
 		"fieldtype": "Datetime",
 		"label": "Fecha de Envío",
 		"read_only": 1,
+		"allow_on_submit": 1,
 		"insert_after": "facturasend_lote_id"
 	},
 	{
@@ -66,6 +70,7 @@
 		"fieldtype": "Int",
 		"label": "Reintentos",
 		"read_only": 1,
+		"allow_on_submit": 1,
 		"default": "0",
 		"insert_after": "facturasend_fecha_envio"
 	},
@@ -85,6 +90,7 @@
 		"fieldtype": "Text",
 		"label": "Mensaje de Estado",
 		"read_only": 1,
+		"allow_on_submit": 1,
 		"insert_after": "section_break_fs2"
 	},
 	{
