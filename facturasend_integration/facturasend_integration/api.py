@@ -272,24 +272,30 @@ def convert_document_to_facturasend(doc, settings):
 		customer = frappe.get_doc("Customer", doc.customer)
 		
 		# Preparar datos del cliente
+		# Convertir contribuyente a boolean
+		es_contribuyente = customer.get("facturasend_contribuyente", 1) == 1 or customer.get("facturasend_contribuyente", 1) == True
+		
 		cliente_data = {
-			"contribuyente": customer.get("facturasend_contribuyente", True),
+			"contribuyente": es_contribuyente,  # Boolean, no int
 			"razonSocial": customer.customer_name,
 			"nombreFantasia": customer.get("facturasend_nombre_fantasia") or customer.customer_name,
 			"tipoOperacion": extract_number(customer.get("facturasend_tipo_operacion", "1")),
 			"pais": customer.get("facturasend_pais", "PRY"),
 			"paisDescripcion": customer.get("facturasend_pais_desc", "Paraguay"),
 			"tipoContribuyente": extract_number(customer.get("facturasend_tipo_contribuyente", "1")),
-			"documentoTipo": extract_number(customer.get("facturasend_documento_tipo", "1")),
-			"documentoNumero": customer.get("facturasend_documento_numero", ""),
 			"telefono": customer.get("facturasend_telefono", ""),
 			"celular": customer.get("facturasend_celular", ""),
 			"email": customer.get("email_id", ""),
-			"codigo": customer.get("facturasend_codigo", customer.name)
+			"codigo": customer.name  # ID del cliente de ERPNext
 		}
 		
+		# documentoTipo y documentoNumero solo si NO es contribuyente
+		if not es_contribuyente:
+			cliente_data["documentoTipo"] = extract_number(customer.get("facturasend_documento_tipo", "1"))
+			cliente_data["documentoNumero"] = customer.get("facturasend_documento_numero", "")
+		
 		# Agregar RUC si es contribuyente
-		if cliente_data["contribuyente"]:
+		if es_contribuyente:
 			cliente_data["ruc"] = customer.get("facturasend_ruc", "")
 		
 		# Agregar dirección si está disponible
@@ -314,9 +320,9 @@ def convert_document_to_facturasend(doc, settings):
 		user = frappe.get_doc("User", doc.owner)
 		usuario_data = {
 			"documentoTipo": extract_number(user.get("facturasend_documento_tipo", "1")),
-			"documentoNumero": user.get("facturasend_documento_numero", ""),
+			"documentoNumero": user.get("facturasend_documento_numero", "") or "",
 			"nombre": user.full_name,
-			"cargo": user.get("facturasend_cargo", "")
+			"cargo": user.get("facturasend_cargo", "") or ""
 		}
 		
 		# Preparar items
@@ -341,18 +347,15 @@ def convert_document_to_facturasend(doc, settings):
 				"cambio": 0.0,
 				"ivaTipo": iva_tipo,
 				"ivaBase": 100,
-				"iva": iva_tasa
+				"iva": iva_tasa,
+				"extras": {
+					"barCode": item_doc.get("barcode") or item.item_code  # Usar barcode de ERPNext o código como fallback
+				}
 			}
 			
 			# Agregar observación si existe
 			if item.get("description"):
 				item_data["observacion"] = item.description
-			
-			# Agregar código de barras si existe
-			if item_doc.get("facturasend_barcode"):
-				if "extras" not in item_data:
-					item_data["extras"] = {}
-				item_data["extras"]["barCode"] = item_doc.get("facturasend_barcode")
 			
 			# Agregar NCM si existe
 			if item_doc.get("facturasend_ncm"):
