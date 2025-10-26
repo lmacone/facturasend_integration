@@ -138,20 +138,34 @@ def send_batch_to_facturasend(documents):
 		
 		# Preparar datos para FacturaSend
 		batch_data = []
+		conversion_errors = []
+		
 		for doc_info in documents:
 			doc = frappe.get_doc("Sales Invoice", doc_info['name'])
 			
 			# Verificar reintentos
 			if doc.facturasend_reintentos and doc.facturasend_reintentos >= settings.max_retries:
+				conversion_errors.append(f"{doc.name}: Máximo de reintentos alcanzado")
 				continue
 			
 			# Convertir documento a formato FacturaSend
-			fs_data = convert_document_to_facturasend(doc, settings)
-			if fs_data:
-				batch_data.append(fs_data)
+			try:
+				fs_data = convert_document_to_facturasend(doc, settings)
+				if fs_data:
+					batch_data.append(fs_data)
+				else:
+					conversion_errors.append(f"{doc.name}: Conversión retornó None")
+			except Exception as e:
+				error_msg = f"{doc.name}: {str(e)}"
+				conversion_errors.append(error_msg)
+				frappe.log_error(frappe.get_traceback(), f"Error convirtiendo {doc.name}")
+		
+		if conversion_errors:
+			frappe.log_error("\n".join(conversion_errors), "FacturaSend Conversion Errors")
 		
 		if not batch_data:
-			return {"success": False, "error": "No hay documentos válidos para enviar"}
+			error_detail = "\n".join(conversion_errors) if conversion_errors else "Razón desconocida"
+			return {"success": False, "error": f"No hay documentos válidos para enviar. Detalles:\n{error_detail}"}
 		
 		# Enviar a FacturaSend API
 		response = send_to_facturasend_api(batch_data, settings)
@@ -193,6 +207,8 @@ def convert_document_to_facturasend(doc, settings):
 	"""Convierte un documento de ERPNext al formato requerido por FacturaSend"""
 	
 	try:
+		frappe.log_error(f"Iniciando conversión de {doc.name}", "FacturaSend Conversion Debug")
+		
 		# Determinar tipo de documento
 		tipo_documento = 1  # Factura
 		if doc.is_return and not doc.is_debit_note:
