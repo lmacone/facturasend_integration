@@ -30,18 +30,41 @@ def get_pending_documents(tipo_documento=None, desde_fecha=None, hasta_fecha=Non
 		if desde_fecha:
 			filters["posting_date"] = [">=", desde_fecha]
 		if hasta_fecha:
-			filters["posting_date"] = ["<=", hasta_fecha]
+			if desde_fecha:
+				# Si desde_fecha está en filters, necesitamos modificar el filtro
+				filters["posting_date"] = [[">=", desde_fecha], ["<=", hasta_fecha]]
+			else:
+				filters["posting_date"] = ["<=", hasta_fecha]
 		
-		invoices = frappe.get_all("Sales Invoice",
-			filters=filters,
-			fields=["name", "customer", "customer_name", "posting_date", "grand_total", 
-			        "currency", "facturasend_cdc", "facturasend_estado", 
-			        "facturasend_mensaje_estado", "facturasend_lote_id"]
-		)
-		
-		for inv in invoices:
-			inv['doctype'] = 'Sales Invoice'
-			documents.append(inv)
+		try:
+			invoices = frappe.get_all("Sales Invoice",
+				filters=filters,
+				fields=["name", "customer", "customer_name", "posting_date", "grand_total", 
+				        "currency"],
+				order_by="posting_date desc"
+			)
+			
+			# Obtener campos personalizados por separado para evitar errores si no existen
+			for inv in invoices:
+				inv['doctype'] = 'Sales Invoice'
+				
+				# Intentar obtener campos FacturaSend de forma segura
+				try:
+					doc = frappe.get_doc("Sales Invoice", inv.name)
+					inv['facturasend_cdc'] = getattr(doc, 'facturasend_cdc', None)
+					inv['facturasend_estado'] = getattr(doc, 'facturasend_estado', None)
+					inv['facturasend_mensaje_estado'] = getattr(doc, 'facturasend_mensaje_estado', None)
+					inv['facturasend_lote_id'] = getattr(doc, 'facturasend_lote_id', None)
+				except:
+					inv['facturasend_cdc'] = None
+					inv['facturasend_estado'] = None
+					inv['facturasend_mensaje_estado'] = None
+					inv['facturasend_lote_id'] = None
+				
+				documents.append(inv)
+		except Exception as e:
+			frappe.log_error(frappe.get_traceback(), "Error obteniendo Sales Invoices")
+			frappe.throw(_(f"Error obteniendo facturas: {str(e)}"))
 	
 	# Credit Notes
 	if not tipo_documento or tipo_documento == "Credit Note":

@@ -42,8 +42,14 @@ function load_pending_documents(frm) {
 }
 
 function render_document_list(frm, documents) {
+	if (!documents || documents.length === 0) {
+		frappe.msgprint(__('No se encontraron documentos'));
+		return;
+	}
+
 	let html = `
 		<div class="facturasend-documents">
+			<p><strong>${documents.length} documento(s) encontrado(s)</strong></p>
 			<table class="table table-bordered">
 				<thead>
 					<tr>
@@ -96,18 +102,21 @@ function render_document_list(frm, documents) {
 		</div>
 	`;
 
-	frm.fields_dict.section_break_3.$wrapper.html(html);
+	// Usar el campo HTML documents_html
+	frm.fields_dict.documents_html.$wrapper.html(html);
 
-	// Event handlers
-	$('#select-all').on('change', function() {
-		$('.doc-checkbox').prop('checked', $(this).is(':checked'));
-	});
+	// Event handlers - usar setTimeout para asegurar que el DOM esté listo
+	setTimeout(function() {
+		$('#select-all').on('change', function() {
+			$('.doc-checkbox').prop('checked', $(this).is(':checked'));
+		});
 
-	$('.retry-btn').on('click', function() {
-		let doctype = $(this).data('doctype');
-		let name = $(this).data('name');
-		retry_document(doctype, name);
-	});
+		$('.retry-btn').on('click', function() {
+			let doctype = $(this).data('doctype');
+			let name = $(this).data('name');
+			retry_document(doctype, name);
+		});
+	}, 100);
 }
 
 function send_selected_documents(frm) {

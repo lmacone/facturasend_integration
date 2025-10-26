@@ -11,7 +11,8 @@
   "desde_fecha",
   "column_break_2",
   "hasta_fecha",
-  "section_break_3"
+  "section_break_3",
+  "documents_html"
  ],
  "fields": [
   {
@@ -45,7 +46,13 @@
   },
   {
    "fieldname": "section_break_3",
-   "fieldtype": "Section Break"
+   "fieldtype": "Section Break",
+   "label": "Documentos"
+  },
+  {
+   "fieldname": "documents_html",
+   "fieldtype": "HTML",
+   "label": "Lista de Documentos"
   }
  ],
  "index_web_pages_for_search": 1,
