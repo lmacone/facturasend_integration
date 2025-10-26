@@ -164,7 +164,27 @@ function send_selected_documents(frm) {
 							download_lote_kude(r.message.lote_id);
 						}
 					} else {
-						frappe.msgprint(__('Error al enviar documentos: ') + (r.message.error || 'Error desconocido'));
+						// Mostrar error detallado
+						let error_msg = r.message.error || 'Error desconocido';
+						
+						// Si hay detalles adicionales, mostrarlos
+						if (r.message.details && r.message.details.length > 0) {
+							error_msg += '\n\nDetalles:\n' + r.message.details.join('\n');
+						}
+						
+						// Si hay response de la API, mostrarlo
+						if (r.message.response) {
+							error_msg += '\n\nRespuesta API:\n' + r.message.response;
+						}
+						
+						frappe.msgprint({
+							title: __('Error al enviar documentos'),
+							message: error_msg,
+							indicator: 'red'
+						});
+						
+						// También mostrar en consola para debugging
+						console.error('FacturaSend Error:', r.message);
 					}
 				}
 			});

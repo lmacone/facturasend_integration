@@ -165,12 +165,11 @@ def send_batch_to_facturasend(documents):
 				conversion_errors.append(error_msg)
 				frappe.log_error(frappe.get_traceback(), f"Error convirtiendo {doc.name}")
 		
-		if conversion_errors:
-			frappe.log_error("\n".join(conversion_errors), "FacturaSend Conversion Errors")
-		
 		if not batch_data:
 			error_detail = "\n".join(conversion_errors) if conversion_errors else "Razón desconocida"
-			return {"success": False, "error": f"No hay documentos válidos para enviar. Detalles:\n{error_detail}"}
+			# Guardar en log Y retornar al usuario
+			frappe.log_error(error_detail, "FacturaSend Conversion Errors")
+			return {"success": False, "error": f"No hay documentos válidos para enviar", "details": conversion_errors}
 		
 		# Enviar a FacturaSend API
 		response = send_to_facturasend_api(batch_data, settings)
@@ -446,14 +445,18 @@ def send_to_facturasend_api(batch_data, settings):
 		response = requests.post(url, json=batch_data, headers=headers, timeout=30)
 		
 		# Log de respuesta
-		frappe.log_error(f"Status: {response.status_code}\n\nRespuesta:\n{response.text}", "FacturaSend Response")
+		response_text = response.text
+		frappe.log_error(f"Status: {response.status_code}\n\nRespuesta:\n{response_text}", "FacturaSend Response")
 		
 		if response.status_code == 200:
 			return response.json()
 		else:
+			# Incluir response completo en el error
 			return {
 				"success": False,
-				"error": f"Error HTTP {response.status_code}: {response.text}"
+				"error": f"Error HTTP {response.status_code}: {response_text}",
+				"status_code": response.status_code,
+				"response": response_text
 			}
 			
 	except Exception as e:
