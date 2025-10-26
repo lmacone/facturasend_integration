@@ -143,9 +143,14 @@ def send_batch_to_facturasend(documents):
 		for doc_info in documents:
 			doc = frappe.get_doc("Sales Invoice", doc_info['name'])
 			
-			# Verificar reintentos
-			if doc.facturasend_reintentos and doc.facturasend_reintentos >= settings.max_retries:
-				conversion_errors.append(f"{doc.name}: Máximo de reintentos alcanzado")
+			# Verificar si ya está aprobado (no reintentar documentos exitosos)
+			if doc.facturasend_estado == "Aprobado":
+				conversion_errors.append(f"{doc.name}: Ya está aprobado en FacturaSend")
+				continue
+			
+			# Verificar reintentos solo si tiene error
+			if doc.facturasend_estado == "Error" and doc.facturasend_reintentos and doc.facturasend_reintentos >= settings.max_retries:
+				conversion_errors.append(f"{doc.name}: Máximo de reintentos alcanzado ({doc.facturasend_reintentos}/{settings.max_retries})")
 				continue
 			
 			# Convertir documento a formato FacturaSend
@@ -186,9 +191,15 @@ def send_batch_to_facturasend(documents):
 			# Actualizar documentos con error
 			for doc_info in documents:
 				doc = frappe.get_doc("Sales Invoice", doc_info['name'])
+				
+				# Solo incrementar reintentos si ya tenía estado de error
+				if doc.facturasend_estado == "Error":
+					doc.facturasend_reintentos = (doc.facturasend_reintentos or 0) + 1
+				else:
+					doc.facturasend_reintentos = 1
+				
 				doc.facturasend_estado = "Error"
 				doc.facturasend_mensaje_estado = response.get('error', 'Error desconocido')
-				doc.facturasend_reintentos = (doc.facturasend_reintentos or 0) + 1
 				doc.save(ignore_permissions=True)
 			
 			frappe.db.commit()
