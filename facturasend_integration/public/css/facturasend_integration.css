@@ -1,0 +1,29 @@
+/* FacturaSend Integration Styles */
+
+.facturasend-documents {
+    margin: 20px 0;
+}
+
+.facturasend-documents table {
+    width: 100%;
+}
+
+.facturasend-documents .badge {
+    padding: 4px 8px;
+    border-radius: 3px;
+    color: white;
+    font-size: 11px;
+}
+
+.facturasend-documents .btn-xs {
+    padding: 2px 8px;
+    font-size: 11px;
+}
+
+.facturasend-documents .doc-checkbox {
+    cursor: pointer;
+}
+
+#select-all {
+    cursor: pointer;
+}
