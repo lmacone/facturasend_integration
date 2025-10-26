@@ -1,6 +1,7 @@
 [
 	{
 		"doctype": "Custom Field",
+		"name": "Customer-facturasend_section",
 		"dt": "Customer",
 		"fieldname": "facturasend_section",
 		"fieldtype": "Section Break",
@@ -9,6 +10,7 @@
 	},
 	{
 		"doctype": "Custom Field",
+		"name": "Customer-facturasend_contribuyente",
 		"dt": "Customer",
 		"fieldname": "facturasend_contribuyente",
 		"fieldtype": "Check",
@@ -18,6 +20,7 @@
 	},
 	{
 		"doctype": "Custom Field",
+		"name": "Customer-facturasend_ruc",
 		"dt": "Customer",
 		"fieldname": "facturasend_ruc",
 		"fieldtype": "Data",
@@ -26,6 +29,7 @@
 	},
 	{
 		"doctype": "Custom Field",
+		"name": "Customer-column_break_fs1",
 		"dt": "Customer",
 		"fieldname": "column_break_fs1",
 		"fieldtype": "Column Break",
@@ -33,6 +37,7 @@
 	},
 	{
 		"doctype": "Custom Field",
+		"name": "Customer-facturasend_nombre_fantasia",
 		"dt": "Customer",
 		"fieldname": "facturasend_nombre_fantasia",
 		"fieldtype": "Data",
@@ -41,6 +46,7 @@
 	},
 	{
 		"doctype": "Custom Field",
+		"name": "Customer-facturasend_tipo_operacion",
 		"dt": "Customer",
 		"fieldname": "facturasend_tipo_operacion",
 		"fieldtype": "Select",
@@ -51,6 +57,7 @@
 	},
 	{
 		"doctype": "Custom Field",
+		"name": "Customer-facturasend_tipo_contribuyente",
 		"dt": "Customer",
 		"fieldname": "facturasend_tipo_contribuyente",
 		"fieldtype": "Select",
@@ -61,6 +68,7 @@
 	},
 	{
 		"doctype": "Custom Field",
+		"name": "Customer-section_break_fs2",
 		"dt": "Customer",
 		"fieldname": "section_break_fs2",
 		"fieldtype": "Section Break",
@@ -69,6 +77,7 @@
 	},
 	{
 		"doctype": "Custom Field",
+		"name": "Customer-facturasend_documento_tipo",
 		"dt": "Customer",
 		"fieldname": "facturasend_documento_tipo",
 		"fieldtype": "Select",
@@ -79,6 +88,7 @@
 	},
 	{
 		"doctype": "Custom Field",
+		"name": "Customer-facturasend_documento_numero",
 		"dt": "Customer",
 		"fieldname": "facturasend_documento_numero",
 		"fieldtype": "Data",
@@ -87,6 +97,7 @@
 	},
 	{
 		"doctype": "Custom Field",
+		"name": "Customer-column_break_fs3",
 		"dt": "Customer",
 		"fieldname": "column_break_fs3",
 		"fieldtype": "Column Break",
@@ -94,6 +105,7 @@
 	},
 	{
 		"doctype": "Custom Field",
+		"name": "Customer-facturasend_telefono",
 		"dt": "Customer",
 		"fieldname": "facturasend_telefono",
 		"fieldtype": "Data",
@@ -102,6 +114,7 @@
 	},
 	{
 		"doctype": "Custom Field",
+		"name": "Customer-facturasend_celular",
 		"dt": "Customer",
 		"fieldname": "facturasend_celular",
 		"fieldtype": "Data",
@@ -110,6 +123,7 @@
 	},
 	{
 		"doctype": "Custom Field",
+		"name": "Customer-section_break_fs4",
 		"dt": "Customer",
 		"fieldname": "section_break_fs4",
 		"fieldtype": "Section Break",
@@ -118,6 +132,7 @@
 	},
 	{
 		"doctype": "Custom Field",
+		"name": "Customer-facturasend_departamento",
 		"dt": "Customer",
 		"fieldname": "facturasend_departamento",
 		"fieldtype": "Int",
@@ -126,6 +141,7 @@
 	},
 	{
 		"doctype": "Custom Field",
+		"name": "Customer-facturasend_departamento_desc",
 		"dt": "Customer",
 		"fieldname": "facturasend_departamento_desc",
 		"fieldtype": "Data",
@@ -134,6 +150,7 @@
 	},
 	{
 		"doctype": "Custom Field",
+		"name": "Customer-column_break_fs5",
 		"dt": "Customer",
 		"fieldname": "column_break_fs5",
 		"fieldtype": "Column Break",
@@ -141,6 +158,7 @@
 	},
 	{
 		"doctype": "Custom Field",
+		"name": "Customer-facturasend_distrito",
 		"dt": "Customer",
 		"fieldname": "facturasend_distrito",
 		"fieldtype": "Int",
@@ -149,6 +167,7 @@
 	},
 	{
 		"doctype": "Custom Field",
+		"name": "Customer-facturasend_distrito_desc",
 		"dt": "Customer",
 		"fieldname": "facturasend_distrito_desc",
 		"fieldtype": "Data",
@@ -157,6 +176,7 @@
 	},
 	{
 		"doctype": "Custom Field",
+		"name": "Customer-column_break_fs6",
 		"dt": "Customer",
 		"fieldname": "column_break_fs6",
 		"fieldtype": "Column Break",
@@ -164,6 +184,7 @@
 	},
 	{
 		"doctype": "Custom Field",
+		"name": "Customer-facturasend_ciudad",
 		"dt": "Customer",
 		"fieldname": "facturasend_ciudad",
 		"fieldtype": "Int",
@@ -172,6 +193,7 @@
 	},
 	{
 		"doctype": "Custom Field",
+		"name": "Customer-facturasend_ciudad_desc",
 		"dt": "Customer",
 		"fieldname": "facturasend_ciudad_desc",
 		"fieldtype": "Data",
@@ -180,6 +202,7 @@
 	},
 	{
 		"doctype": "Custom Field",
+		"name": "Customer-section_break_fs7",
 		"dt": "Customer",
 		"fieldname": "section_break_fs7",
 		"fieldtype": "Section Break",
@@ -188,6 +211,7 @@
 	},
 	{
 		"doctype": "Custom Field",
+		"name": "Customer-facturasend_direccion",
 		"dt": "Customer",
 		"fieldname": "facturasend_direccion",
 		"fieldtype": "Data",
@@ -196,6 +220,7 @@
 	},
 	{
 		"doctype": "Custom Field",
+		"name": "Customer-facturasend_numero_casa",
 		"dt": "Customer",
 		"fieldname": "facturasend_numero_casa",
 		"fieldtype": "Data",
@@ -204,6 +229,7 @@
 	},
 	{
 		"doctype": "Custom Field",
+		"name": "Customer-column_break_fs8",
 		"dt": "Customer",
 		"fieldname": "column_break_fs8",
 		"fieldtype": "Column Break",
@@ -211,6 +237,7 @@
 	},
 	{
 		"doctype": "Custom Field",
+		"name": "Customer-facturasend_pais",
 		"dt": "Customer",
 		"fieldname": "facturasend_pais",
 		"fieldtype": "Data",
@@ -220,6 +247,7 @@
 	},
 	{
 		"doctype": "Custom Field",
+		"name": "Customer-facturasend_pais_desc",
 		"dt": "Customer",
 		"fieldname": "facturasend_pais_desc",
 		"fieldtype": "Data",
@@ -229,6 +257,7 @@
 	},
 	{
 		"doctype": "Custom Field",
+		"name": "Customer-facturasend_codigo",
 		"dt": "Customer",
 		"fieldname": "facturasend_codigo",
 		"fieldtype": "Data",

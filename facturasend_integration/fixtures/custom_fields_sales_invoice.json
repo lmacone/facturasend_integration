@@ -1,6 +1,7 @@
 [
 	{
 		"doctype": "Custom Field",
+		"name": "Sales Invoice-facturasend_section",
 		"dt": "Sales Invoice",
 		"fieldname": "facturasend_section",
 		"fieldtype": "Section Break",
@@ -9,6 +10,7 @@
 	},
 	{
 		"doctype": "Custom Field",
+		"name": "Sales Invoice-facturasend_cdc",
 		"dt": "Sales Invoice",
 		"fieldname": "facturasend_cdc",
 		"fieldtype": "Data",
@@ -19,6 +21,7 @@
 	},
 	{
 		"doctype": "Custom Field",
+		"name": "Sales Invoice-facturasend_estado",
 		"dt": "Sales Invoice",
 		"fieldname": "facturasend_estado",
 		"fieldtype": "Select",
@@ -29,6 +32,7 @@
 	},
 	{
 		"doctype": "Custom Field",
+		"name": "Sales Invoice-column_break_fs1",
 		"dt": "Sales Invoice",
 		"fieldname": "column_break_fs1",
 		"fieldtype": "Column Break",
@@ -36,6 +40,7 @@
 	},
 	{
 		"doctype": "Custom Field",
+		"name": "Sales Invoice-facturasend_lote_id",
 		"dt": "Sales Invoice",
 		"fieldname": "facturasend_lote_id",
 		"fieldtype": "Data",
@@ -45,6 +50,7 @@
 	},
 	{
 		"doctype": "Custom Field",
+		"name": "Sales Invoice-facturasend_fecha_envio",
 		"dt": "Sales Invoice",
 		"fieldname": "facturasend_fecha_envio",
 		"fieldtype": "Datetime",
@@ -54,6 +60,7 @@
 	},
 	{
 		"doctype": "Custom Field",
+		"name": "Sales Invoice-facturasend_reintentos",
 		"dt": "Sales Invoice",
 		"fieldname": "facturasend_reintentos",
 		"fieldtype": "Int",
@@ -64,6 +71,7 @@
 	},
 	{
 		"doctype": "Custom Field",
+		"name": "Sales Invoice-section_break_fs2",
 		"dt": "Sales Invoice",
 		"fieldname": "section_break_fs2",
 		"fieldtype": "Section Break",
@@ -71,6 +79,7 @@
 	},
 	{
 		"doctype": "Custom Field",
+		"name": "Sales Invoice-facturasend_mensaje_estado",
 		"dt": "Sales Invoice",
 		"fieldname": "facturasend_mensaje_estado",
 		"fieldtype": "Text",
@@ -80,6 +89,7 @@
 	},
 	{
 		"doctype": "Custom Field",
+		"name": "Sales Invoice-section_break_fs3",
 		"dt": "Sales Invoice",
 		"fieldname": "section_break_fs3",
 		"fieldtype": "Section Break",
@@ -89,6 +99,7 @@
 	},
 	{
 		"doctype": "Custom Field",
+		"name": "Sales Invoice-facturasend_establecimiento",
 		"dt": "Sales Invoice",
 		"fieldname": "facturasend_establecimiento",
 		"fieldtype": "Data",
@@ -98,6 +109,7 @@
 	},
 	{
 		"doctype": "Custom Field",
+		"name": "Sales Invoice-facturasend_punto",
 		"dt": "Sales Invoice",
 		"fieldname": "facturasend_punto",
 		"fieldtype": "Data",
@@ -107,6 +119,7 @@
 	},
 	{
 		"doctype": "Custom Field",
+		"name": "Sales Invoice-column_break_fs4",
 		"dt": "Sales Invoice",
 		"fieldname": "column_break_fs4",
 		"fieldtype": "Column Break",
@@ -114,6 +127,7 @@
 	},
 	{
 		"doctype": "Custom Field",
+		"name": "Sales Invoice-facturasend_tipo_emision",
 		"dt": "Sales Invoice",
 		"fieldname": "facturasend_tipo_emision",
 		"fieldtype": "Select",
@@ -124,6 +138,7 @@
 	},
 	{
 		"doctype": "Custom Field",
+		"name": "Sales Invoice-facturasend_tipo_transaccion",
 		"dt": "Sales Invoice",
 		"fieldname": "facturasend_tipo_transaccion",
 		"fieldtype": "Select",
@@ -134,6 +149,7 @@
 	},
 	{
 		"doctype": "Custom Field",
+		"name": "Sales Invoice-facturasend_tipo_impuesto",
 		"dt": "Sales Invoice",
 		"fieldname": "facturasend_tipo_impuesto",
 		"fieldtype": "Select",
@@ -144,6 +160,7 @@
 	},
 	{
 		"doctype": "Custom Field",
+		"name": "Sales Invoice-section_break_fs5",
 		"dt": "Sales Invoice",
 		"fieldname": "section_break_fs5",
 		"fieldtype": "Section Break",
@@ -151,6 +168,7 @@
 	},
 	{
 		"doctype": "Custom Field",
+		"name": "Sales Invoice-facturasend_descripcion",
 		"dt": "Sales Invoice",
 		"fieldname": "facturasend_descripcion",
 		"fieldtype": "Small Text",
@@ -167,6 +185,7 @@
 	},
 	{
 		"doctype": "Custom Field",
+		"name": "Sales Invoice-section_break_fs6",
 		"dt": "Sales Invoice",
 		"fieldname": "section_break_fs6",
 		"fieldtype": "Section Break",
@@ -175,6 +194,7 @@
 	},
 	{
 		"doctype": "Custom Field",
+		"name": "Sales Invoice-facturasend_presencia",
 		"dt": "Sales Invoice",
 		"fieldname": "facturasend_presencia",
 		"fieldtype": "Select",
