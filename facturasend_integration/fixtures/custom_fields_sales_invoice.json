@@ -209,5 +209,16 @@
 		"options": "1 - Operación Presencial\n2 - Operación Electrónica\n3 - Operación Telemarketing\n4 - Venta a Domicilio\n5 - Operación Bancaria o Financiera",
 		"default": "1 - Operación Presencial",
 		"insert_after": "section_break_fs6"
+	},
+	{
+		"doctype": "Custom Field",
+		"name": "Sales Invoice-facturasend_modo_pago",
+		"dt": "Sales Invoice",
+		"fieldname": "facturasend_modo_pago",
+		"fieldtype": "Select",
+		"label": "Modo de Pago",
+		"options": "1 - Efectivo\n2 - Cheque\n3 - Tarjeta de Crédito\n4 - Tarjeta de Débito\n5 - Transferencia\n6 - Giro\n7 - Billetera Electrónica\n99 - Otro",
+		"default": "1 - Efectivo",
+		"insert_after": "facturasend_presencia"
 	}
 ]

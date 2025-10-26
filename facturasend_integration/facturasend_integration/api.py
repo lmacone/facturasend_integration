@@ -403,32 +403,27 @@ def prepare_payment_condition(doc):
 		"entregas": []
 	}
 	
-	# Determinar si es contado o crédito
+	# Determinar si es contado o crédito basado en payment_schedule
 	if doc.payment_schedule and len(doc.payment_schedule) > 0:
 		# Es a crédito
 		condicion["tipo"] = 2
 		
-		# Preparar entregas (si hay pagos parciales)
-		if hasattr(doc, 'payments') and doc.payments:
-			for payment in doc.payments:
-				entrega = {
-					"tipo": map_payment_mode_to_fs(payment.mode_of_payment),
-					"monto": str(int(payment.amount)),
-					"moneda": doc.currency,
-					"monedaDescripcion": get_currency_description(doc.currency),
-					"cambio": 0.0
-				}
-				condicion["entregas"].append(entrega)
-		else:
-			# Si no hay pagos, agregar el total como efectivo
-			entrega = {
-				"tipo": 1,  # Efectivo
-				"monto": str(int(doc.grand_total)),
-				"moneda": doc.currency,
-				"monedaDescripcion": get_currency_description(doc.currency),
-				"cambio": 0.0
-			}
-			condicion["entregas"].append(entrega)
+		# La entrega siempre va, aunque sea a crédito
+		# Usar mode_of_payment de la factura o default a Efectivo
+		tipo_pago = 1  # Efectivo por defecto
+		
+		# Verificar si tiene un custom field para modo de pago
+		if hasattr(doc, 'facturasend_modo_pago') and doc.facturasend_modo_pago:
+			tipo_pago = extract_number(doc.facturasend_modo_pago)
+		
+		entrega = {
+			"tipo": tipo_pago,
+			"monto": str(int(doc.grand_total)),
+			"moneda": doc.currency,
+			"monedaDescripcion": get_currency_description(doc.currency),
+			"cambio": 0.0
+		}
+		condicion["entregas"].append(entrega)
 		
 		# Preparar información de crédito
 		total_cuotas = len(doc.payment_schedule)
@@ -450,8 +445,15 @@ def prepare_payment_condition(doc):
 		}
 	else:
 		# Es contado
+		# Usar mode_of_payment de la factura o default a Efectivo
+		tipo_pago = 1  # Efectivo por defecto
+		
+		# Verificar si tiene un custom field para modo de pago
+		if hasattr(doc, 'facturasend_modo_pago') and doc.facturasend_modo_pago:
+			tipo_pago = extract_number(doc.facturasend_modo_pago)
+		
 		entrega = {
-			"tipo": 1,  # Efectivo por defecto
+			"tipo": tipo_pago,
 			"monto": str(int(doc.grand_total)),
 			"moneda": doc.currency,
 			"monedaDescripcion": get_currency_description(doc.currency),
