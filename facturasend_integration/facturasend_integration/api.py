@@ -271,6 +271,9 @@ def convert_document_to_facturasend(doc, settings):
 		# Obtener datos del cliente
 		customer = frappe.get_doc("Customer", doc.customer)
 		
+		# Obtener contacto principal del cliente
+		contact = get_customer_primary_contact(customer.name)
+		
 		# Preparar datos del cliente
 		# Convertir contribuyente a boolean
 		es_contribuyente = customer.get("facturasend_contribuyente", 1) == 1 or customer.get("facturasend_contribuyente", 1) == True
@@ -283,9 +286,9 @@ def convert_document_to_facturasend(doc, settings):
 			"pais": customer.get("facturasend_pais", "PRY"),
 			"paisDescripcion": customer.get("facturasend_pais_desc", "Paraguay"),
 			"tipoContribuyente": extract_number(customer.get("facturasend_tipo_contribuyente", "1")),
-			"telefono": customer.get("facturasend_telefono", ""),
-			"celular": customer.get("facturasend_celular", ""),
-			"email": customer.get("email_id", ""),
+			"telefono": contact.get("phone", "") if contact else "",
+			"celular": contact.get("mobile_no", "") if contact else "",
+			"email": contact.get("email_id", "") if contact else "",
 			"codigo": customer.name  # ID del cliente de ERPNext
 		}
 		
@@ -298,12 +301,18 @@ def convert_document_to_facturasend(doc, settings):
 		if es_contribuyente:
 			cliente_data["ruc"] = customer.get("facturasend_ruc", "")
 		
-		# Agregar dirección si está disponible
-		if customer.get("facturasend_direccion"):
-			cliente_data["direccion"] = customer.get("facturasend_direccion")
-			cliente_data["numeroCasa"] = customer.get("facturasend_numero_casa", "")
+		# Agregar dirección desde Address vinculado al cliente
+		address = get_customer_primary_address(customer.name)
+		if address:
+			address_line = address.get("address_line1", "")
+			if address.get("address_line2"):
+				address_line += " " + address.get("address_line2")
+			
+			if address_line:
+				cliente_data["direccion"] = address_line
+				cliente_data["numeroCasa"] = ""  # ERPNext no tiene campo separado para número de casa
 		
-		# Agregar ubicación si está disponible
+		# Agregar ubicación si está disponible en custom fields
 		if customer.get("facturasend_departamento"):
 			cliente_data["departamento"] = customer.get("facturasend_departamento")
 			cliente_data["departamentoDescripcion"] = customer.get("facturasend_departamento_desc", "")
@@ -865,3 +874,53 @@ def get_currency_description(currency):
 	}
 	
 	return currency_map.get(currency, currency)
+
+
+def get_customer_primary_contact(customer_name):
+	"""Obtiene el contacto principal del cliente"""
+	
+	try:
+		# Buscar el vínculo entre Customer y Contact
+		links = frappe.get_all("Dynamic Link",
+			filters={
+				"link_doctype": "Customer",
+				"link_name": customer_name,
+				"parenttype": "Contact"
+			},
+			fields=["parent"],
+			limit=1
+		)
+		
+		if links:
+			contact = frappe.get_doc("Contact", links[0].parent)
+			return contact
+		
+		return None
+	except Exception as e:
+		frappe.log_error(f"Error obteniendo contacto de {customer_name}: {str(e)}", "Get Customer Contact")
+		return None
+
+
+def get_customer_primary_address(customer_name):
+	"""Obtiene la dirección principal del cliente"""
+	
+	try:
+		# Buscar el vínculo entre Customer y Address
+		links = frappe.get_all("Dynamic Link",
+			filters={
+				"link_doctype": "Customer",
+				"link_name": customer_name,
+				"parenttype": "Address"
+			},
+			fields=["parent"],
+			limit=1
+		)
+		
+		if links:
+			address = frappe.get_doc("Address", links[0].parent)
+			return address
+		
+		return None
+	except Exception as e:
+		frappe.log_error(f"Error obteniendo dirección de {customer_name}: {str(e)}", "Get Customer Address")
+		return None
