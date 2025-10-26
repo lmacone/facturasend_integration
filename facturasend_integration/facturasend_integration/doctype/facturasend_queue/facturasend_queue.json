@@ -1,0 +1,90 @@
+{
+ "actions": [],
+ "creation": "2025-10-26 10:00:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "filters_section",
+  "tipo_documento",
+  "column_break_1",
+  "desde_fecha",
+  "column_break_2",
+  "hasta_fecha",
+  "section_break_3"
+ ],
+ "fields": [
+  {
+   "fieldname": "filters_section",
+   "fieldtype": "Section Break",
+   "label": "Filtros"
+  },
+  {
+   "fieldname": "tipo_documento",
+   "fieldtype": "Select",
+   "label": "Tipo de Documento",
+   "options": "\nSales Invoice\nCredit Note\nDebit Note"
+  },
+  {
+   "fieldname": "column_break_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "desde_fecha",
+   "fieldtype": "Date",
+   "label": "Desde Fecha"
+  },
+  {
+   "fieldname": "column_break_2",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "hasta_fecha",
+   "fieldtype": "Date",
+   "label": "Hasta Fecha"
+  },
+  {
+   "fieldname": "section_break_3",
+   "fieldtype": "Section Break"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "issingle": 1,
+ "links": [],
+ "modified": "2025-10-26 10:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "FacturaSend Integration",
+ "name": "FacturaSend Queue",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "role": "Accounts Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "role": "Accounts User",
+   "share": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

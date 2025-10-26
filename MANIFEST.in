@@ -1,0 +1,18 @@
+include MANIFEST.in
+include requirements.txt
+include *.json
+include *.md
+include *.py
+include *.txt
+recursive-include facturasend_integration *.css
+recursive-include facturasend_integration *.csv
+recursive-include facturasend_integration *.html
+recursive-include facturasend_integration *.ico
+recursive-include facturasend_integration *.js
+recursive-include facturasend_integration *.json
+recursive-include facturasend_integration *.md
+recursive-include facturasend_integration *.png
+recursive-include facturasend_integration *.py
+recursive-include facturasend_integration *.svg
+recursive-include facturasend_integration *.txt
+recursive-exclude facturasend_integration *.pyc

@@ -1,0 +1,165 @@
+[
+	{
+		"dt": "Sales Invoice",
+		"fieldname": "facturasend_section",
+		"fieldtype": "Section Break",
+		"label": "Datos FacturaSend",
+		"insert_after": "other_charges_calculation"
+	},
+	{
+		"dt": "Sales Invoice",
+		"fieldname": "facturasend_cdc",
+		"fieldtype": "Data",
+		"label": "CDC",
+		"read_only": 1,
+		"insert_after": "facturasend_section",
+		"length": 44
+	},
+	{
+		"dt": "Sales Invoice",
+		"fieldname": "facturasend_estado",
+		"fieldtype": "Select",
+		"label": "Estado FacturaSend",
+		"options": "\nPendiente\nEnviado\nAprobado\nRechazado\nError",
+		"read_only": 1,
+		"insert_after": "facturasend_cdc"
+	},
+	{
+		"dt": "Sales Invoice",
+		"fieldname": "column_break_fs1",
+		"fieldtype": "Column Break",
+		"insert_after": "facturasend_estado"
+	},
+	{
+		"dt": "Sales Invoice",
+		"fieldname": "facturasend_lote_id",
+		"fieldtype": "Data",
+		"label": "Lote ID",
+		"read_only": 1,
+		"insert_after": "column_break_fs1"
+	},
+	{
+		"dt": "Sales Invoice",
+		"fieldname": "facturasend_fecha_envio",
+		"fieldtype": "Datetime",
+		"label": "Fecha de Envío",
+		"read_only": 1,
+		"insert_after": "facturasend_lote_id"
+	},
+	{
+		"dt": "Sales Invoice",
+		"fieldname": "facturasend_reintentos",
+		"fieldtype": "Int",
+		"label": "Reintentos",
+		"read_only": 1,
+		"default": "0",
+		"insert_after": "facturasend_fecha_envio"
+	},
+	{
+		"dt": "Sales Invoice",
+		"fieldname": "section_break_fs2",
+		"fieldtype": "Section Break",
+		"insert_after": "facturasend_reintentos"
+	},
+	{
+		"dt": "Sales Invoice",
+		"fieldname": "facturasend_mensaje_estado",
+		"fieldtype": "Text",
+		"label": "Mensaje de Estado",
+		"read_only": 1,
+		"insert_after": "section_break_fs2"
+	},
+	{
+		"dt": "Sales Invoice",
+		"fieldname": "section_break_fs3",
+		"fieldtype": "Section Break",
+		"label": "Configuración Documento Electrónico",
+		"insert_after": "facturasend_mensaje_estado",
+		"collapsible": 1
+	},
+	{
+		"dt": "Sales Invoice",
+		"fieldname": "facturasend_establecimiento",
+		"fieldtype": "Data",
+		"label": "Establecimiento",
+		"insert_after": "section_break_fs3",
+		"length": 3
+	},
+	{
+		"dt": "Sales Invoice",
+		"fieldname": "facturasend_punto",
+		"fieldtype": "Data",
+		"label": "Punto de Expedición",
+		"insert_after": "facturasend_establecimiento",
+		"length": 3
+	},
+	{
+		"dt": "Sales Invoice",
+		"fieldname": "column_break_fs4",
+		"fieldtype": "Column Break",
+		"insert_after": "facturasend_punto"
+	},
+	{
+		"dt": "Sales Invoice",
+		"fieldname": "facturasend_tipo_emision",
+		"fieldtype": "Select",
+		"label": "Tipo de Emisión",
+		"options": "1 - Normal\n2 - Contingencia",
+		"default": "1 - Normal",
+		"insert_after": "column_break_fs4"
+	},
+	{
+		"dt": "Sales Invoice",
+		"fieldname": "facturasend_tipo_transaccion",
+		"fieldtype": "Select",
+		"label": "Tipo de Transacción",
+		"options": "1 - Venta de Mercadería\n2 - Prestación de Servicios\n3 - Mixto\n4 - Venta de Activo Fijo\n5 - Venta de Divisas\n6 - Compra de Divisas\n7 - Promoción o Entrega de Muestras\n8 - Donación\n9 - Anticipo\n10 - Compra de Productos\n11 - Compra de Servicios\n12 - Venta de Crédito Fiscal",
+		"default": "1 - Venta de Mercadería",
+		"insert_after": "facturasend_tipo_emision"
+	},
+	{
+		"dt": "Sales Invoice",
+		"fieldname": "facturasend_tipo_impuesto",
+		"fieldtype": "Select",
+		"label": "Tipo de Impuesto",
+		"options": "1 - IVA\n2 - ISC\n3 - Ninguno\n4 - IVA - Renta",
+		"default": "1 - IVA",
+		"insert_after": "facturasend_tipo_transaccion"
+	},
+	{
+		"dt": "Sales Invoice",
+		"fieldname": "section_break_fs5",
+		"fieldtype": "Section Break",
+		"insert_after": "facturasend_tipo_impuesto"
+	},
+	{
+		"dt": "Sales Invoice",
+		"fieldname": "facturasend_descripcion",
+		"fieldtype": "Small Text",
+		"label": "Descripción (aparece en el documento)",
+		"insert_after": "section_break_fs5"
+	},
+	{
+		"dt": "Sales Invoice",
+		"fieldname": "facturasend_observacion",
+		"fieldtype": "Small Text",
+		"label": "Observación (marketing, publicidad, etc.)",
+		"insert_after": "facturasend_descripcion"
+	},
+	{
+		"dt": "Sales Invoice",
+		"fieldname": "section_break_fs6",
+		"fieldtype": "Section Break",
+		"label": "Datos de Factura",
+		"insert_after": "facturasend_observacion"
+	},
+	{
+		"dt": "Sales Invoice",
+		"fieldname": "facturasend_presencia",
+		"fieldtype": "Select",
+		"label": "Presencia",
+		"options": "1 - Operación Presencial\n2 - Operación Electrónica\n3 - Operación Telemarketing\n4 - Venta a Domicilio\n5 - Operación Bancaria o Financiera",
+		"default": "1 - Operación Presencial",
+		"insert_after": "section_break_fs6"
+	}
+]

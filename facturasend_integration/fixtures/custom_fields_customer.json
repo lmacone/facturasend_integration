@@ -1,0 +1,209 @@
+[
+	{
+		"dt": "Customer",
+		"fieldname": "facturasend_section",
+		"fieldtype": "Section Break",
+		"label": "Datos FacturaSend",
+		"insert_after": "tax_category"
+	},
+	{
+		"dt": "Customer",
+		"fieldname": "facturasend_contribuyente",
+		"fieldtype": "Check",
+		"label": "Es Contribuyente",
+		"insert_after": "facturasend_section",
+		"default": "1"
+	},
+	{
+		"dt": "Customer",
+		"fieldname": "facturasend_ruc",
+		"fieldtype": "Data",
+		"label": "RUC",
+		"insert_after": "facturasend_contribuyente"
+	},
+	{
+		"dt": "Customer",
+		"fieldname": "column_break_fs1",
+		"fieldtype": "Column Break",
+		"insert_after": "facturasend_ruc"
+	},
+	{
+		"dt": "Customer",
+		"fieldname": "facturasend_nombre_fantasia",
+		"fieldtype": "Data",
+		"label": "Nombre Fantasía",
+		"insert_after": "column_break_fs1"
+	},
+	{
+		"dt": "Customer",
+		"fieldname": "facturasend_tipo_operacion",
+		"fieldtype": "Select",
+		"label": "Tipo de Operación",
+		"options": "1 - B2B\n2 - B2C\n3 - B2G\n4 - B2F",
+		"default": "1 - B2B",
+		"insert_after": "facturasend_nombre_fantasia"
+	},
+	{
+		"dt": "Customer",
+		"fieldname": "facturasend_tipo_contribuyente",
+		"fieldtype": "Select",
+		"label": "Tipo de Contribuyente",
+		"options": "1 - Persona Física\n2 - Persona Jurídica",
+		"default": "1 - Persona Física",
+		"insert_after": "facturasend_tipo_operacion"
+	},
+	{
+		"dt": "Customer",
+		"fieldname": "section_break_fs2",
+		"fieldtype": "Section Break",
+		"label": "Documento de Identidad",
+		"insert_after": "facturasend_tipo_contribuyente"
+	},
+	{
+		"dt": "Customer",
+		"fieldname": "facturasend_documento_tipo",
+		"fieldtype": "Select",
+		"label": "Tipo de Documento",
+		"options": "1 - Cédula\n2 - Pasaporte\n3 - Otro",
+		"default": "1 - Cédula",
+		"insert_after": "section_break_fs2"
+	},
+	{
+		"dt": "Customer",
+		"fieldname": "facturasend_documento_numero",
+		"fieldtype": "Data",
+		"label": "Número de Documento",
+		"insert_after": "facturasend_documento_tipo"
+	},
+	{
+		"dt": "Customer",
+		"fieldname": "column_break_fs3",
+		"fieldtype": "Column Break",
+		"insert_after": "facturasend_documento_numero"
+	},
+	{
+		"dt": "Customer",
+		"fieldname": "facturasend_telefono",
+		"fieldtype": "Data",
+		"label": "Teléfono",
+		"insert_after": "column_break_fs3"
+	},
+	{
+		"dt": "Customer",
+		"fieldname": "facturasend_celular",
+		"fieldtype": "Data",
+		"label": "Celular",
+		"insert_after": "facturasend_telefono"
+	},
+	{
+		"dt": "Customer",
+		"fieldname": "section_break_fs4",
+		"fieldtype": "Section Break",
+		"label": "Ubicación Paraguay",
+		"insert_after": "facturasend_celular"
+	},
+	{
+		"dt": "Customer",
+		"fieldname": "facturasend_departamento",
+		"fieldtype": "Int",
+		"label": "Departamento (Código)",
+		"insert_after": "section_break_fs4"
+	},
+	{
+		"dt": "Customer",
+		"fieldname": "facturasend_departamento_desc",
+		"fieldtype": "Data",
+		"label": "Departamento Descripción",
+		"insert_after": "facturasend_departamento"
+	},
+	{
+		"dt": "Customer",
+		"fieldname": "column_break_fs5",
+		"fieldtype": "Column Break",
+		"insert_after": "facturasend_departamento_desc"
+	},
+	{
+		"dt": "Customer",
+		"fieldname": "facturasend_distrito",
+		"fieldtype": "Int",
+		"label": "Distrito (Código)",
+		"insert_after": "column_break_fs5"
+	},
+	{
+		"dt": "Customer",
+		"fieldname": "facturasend_distrito_desc",
+		"fieldtype": "Data",
+		"label": "Distrito Descripción",
+		"insert_after": "facturasend_distrito"
+	},
+	{
+		"dt": "Customer",
+		"fieldname": "column_break_fs6",
+		"fieldtype": "Column Break",
+		"insert_after": "facturasend_distrito_desc"
+	},
+	{
+		"dt": "Customer",
+		"fieldname": "facturasend_ciudad",
+		"fieldtype": "Int",
+		"label": "Ciudad (Código)",
+		"insert_after": "column_break_fs6"
+	},
+	{
+		"dt": "Customer",
+		"fieldname": "facturasend_ciudad_desc",
+		"fieldtype": "Data",
+		"label": "Ciudad Descripción",
+		"insert_after": "facturasend_ciudad"
+	},
+	{
+		"dt": "Customer",
+		"fieldname": "section_break_fs7",
+		"fieldtype": "Section Break",
+		"label": "Dirección Detallada",
+		"insert_after": "facturasend_ciudad_desc"
+	},
+	{
+		"dt": "Customer",
+		"fieldname": "facturasend_direccion",
+		"fieldtype": "Data",
+		"label": "Dirección",
+		"insert_after": "section_break_fs7"
+	},
+	{
+		"dt": "Customer",
+		"fieldname": "facturasend_numero_casa",
+		"fieldtype": "Data",
+		"label": "Número de Casa",
+		"insert_after": "facturasend_direccion"
+	},
+	{
+		"dt": "Customer",
+		"fieldname": "column_break_fs8",
+		"fieldtype": "Column Break",
+		"insert_after": "facturasend_numero_casa"
+	},
+	{
+		"dt": "Customer",
+		"fieldname": "facturasend_pais",
+		"fieldtype": "Data",
+		"label": "País (Código)",
+		"default": "PRY",
+		"insert_after": "column_break_fs8"
+	},
+	{
+		"dt": "Customer",
+		"fieldname": "facturasend_pais_desc",
+		"fieldtype": "Data",
+		"label": "País Descripción",
+		"default": "Paraguay",
+		"insert_after": "facturasend_pais"
+	},
+	{
+		"dt": "Customer",
+		"fieldname": "facturasend_codigo",
+		"fieldtype": "Data",
+		"label": "Código Cliente",
+		"insert_after": "facturasend_pais_desc"
+	}
+]

@@ -1,0 +1,24 @@
+[
+	{
+		"dt": "Item",
+		"fieldname": "facturasend_section",
+		"fieldtype": "Section Break",
+		"label": "Datos FacturaSend",
+		"insert_after": "item_defaults",
+		"collapsible": 1
+	},
+	{
+		"dt": "Item",
+		"fieldname": "facturasend_barcode",
+		"fieldtype": "Data",
+		"label": "Código de Barras",
+		"insert_after": "facturasend_section"
+	},
+	{
+		"dt": "Item",
+		"fieldname": "facturasend_ncm",
+		"fieldtype": "Data",
+		"label": "Código NCM",
+		"insert_after": "facturasend_barcode"
+	}
+]

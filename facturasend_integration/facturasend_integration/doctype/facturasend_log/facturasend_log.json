@@ -1,0 +1,124 @@
+{
+ "actions": [],
+ "creation": "2025-10-26 10:00:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "lote_id",
+  "fecha_envio",
+  "column_break_1",
+  "tipo_documento",
+  "cantidad_documentos",
+  "section_break_2",
+  "estado",
+  "column_break_3",
+  "mensaje",
+  "documentos_section",
+  "documentos"
+ ],
+ "fields": [
+  {
+   "fieldname": "lote_id",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Lote ID",
+   "read_only": 1
+  },
+  {
+   "fieldname": "fecha_envio",
+   "fieldtype": "Datetime",
+   "in_list_view": 1,
+   "label": "Fecha de Env\u00edo",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "tipo_documento",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Tipo de Documento",
+   "options": "Sales Invoice\nCredit Note\nDebit Note",
+   "read_only": 1
+  },
+  {
+   "fieldname": "cantidad_documentos",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "label": "Cantidad de Documentos",
+   "read_only": 1
+  },
+  {
+   "fieldname": "section_break_2",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "estado",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Estado",
+   "options": "Enviado\nAprobado\nRechazado\nError",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_3",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "mensaje",
+   "fieldtype": "Text",
+   "label": "Mensaje",
+   "read_only": 1
+  },
+  {
+   "fieldname": "documentos_section",
+   "fieldtype": "Section Break",
+   "label": "Documentos"
+  },
+  {
+   "fieldname": "documentos",
+   "fieldtype": "Table",
+   "label": "Documentos",
+   "options": "FacturaSend Log Item",
+   "read_only": 1
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2025-10-26 10:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "FacturaSend Integration",
+ "name": "FacturaSend Log",
+ "naming_rule": "Autoincrement",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Accounts Manager",
+   "share": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}

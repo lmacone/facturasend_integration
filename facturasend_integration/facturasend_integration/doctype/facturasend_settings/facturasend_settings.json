@@ -1,0 +1,150 @@
+{
+ "actions": [],
+ "creation": "2025-10-26 10:00:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "api_configuration_section",
+  "api_key",
+  "column_break_1",
+  "base_url",
+  "tenant_id",
+  "section_break_2",
+  "establecimiento",
+  "column_break_3",
+  "punto_expedicion",
+  "polling_section",
+  "status_check_interval",
+  "column_break_5",
+  "max_retries",
+  "notification_section",
+  "notification_emails",
+  "column_break_7",
+  "send_error_notifications"
+ ],
+ "fields": [
+  {
+   "fieldname": "api_configuration_section",
+   "fieldtype": "Section Break",
+   "label": "Configuraci\u00f3n API"
+  },
+  {
+   "fieldname": "api_key",
+   "fieldtype": "Password",
+   "label": "API Key",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "https://api.facturasend.com.py",
+   "fieldname": "base_url",
+   "fieldtype": "Data",
+   "label": "Base URL",
+   "reqd": 1
+  },
+  {
+   "fieldname": "tenant_id",
+   "fieldtype": "Data",
+   "label": "Tenant ID",
+   "reqd": 1
+  },
+  {
+   "fieldname": "section_break_2",
+   "fieldtype": "Section Break",
+   "label": "Configuraci\u00f3n de Establecimiento"
+  },
+  {
+   "default": "001",
+   "description": "Establecimiento por defecto (ej: 001)",
+   "fieldname": "establecimiento",
+   "fieldtype": "Data",
+   "label": "Establecimiento",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_3",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "001",
+   "description": "Punto de expedici\u00f3n por defecto (ej: 001)",
+   "fieldname": "punto_expedicion",
+   "fieldtype": "Data",
+   "label": "Punto de Expedici\u00f3n",
+   "reqd": 1
+  },
+  {
+   "fieldname": "polling_section",
+   "fieldtype": "Section Break",
+   "label": "Configuraci\u00f3n de Consulta de Estados"
+  },
+  {
+   "default": "5",
+   "description": "Intervalo en minutos para consultar estados de documentos",
+   "fieldname": "status_check_interval",
+   "fieldtype": "Int",
+   "label": "Intervalo de Consulta (minutos)",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_5",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "3",
+   "description": "N\u00famero m\u00e1ximo de reintentos autom\u00e1ticos",
+   "fieldname": "max_retries",
+   "fieldtype": "Int",
+   "label": "M\u00e1ximo de Reintentos",
+   "reqd": 1
+  },
+  {
+   "fieldname": "notification_section",
+   "fieldtype": "Section Break",
+   "label": "Notificaciones"
+  },
+  {
+   "description": "Emails separados por coma para notificaciones de errores",
+   "fieldname": "notification_emails",
+   "fieldtype": "Small Text",
+   "label": "Emails de Notificaci\u00f3n"
+  },
+  {
+   "fieldname": "column_break_7",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "1",
+   "fieldname": "send_error_notifications",
+   "fieldtype": "Check",
+   "label": "Enviar Notificaciones de Errores"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "issingle": 1,
+ "links": [],
+ "modified": "2025-10-26 10:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "FacturaSend Integration",
+ "name": "FacturaSend Settings",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

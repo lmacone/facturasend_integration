@@ -1,0 +1,11 @@
+{
+ "app_name": "facturasend_integration",
+ "app_title": "FacturaSend Integration",
+ "app_publisher": "Luis",
+ "app_description": "Integración de FacturaSend Paraguay con ERPNext para facturación electrónica",
+ "app_icon": "octicon octicon-file-text",
+ "app_color": "green",
+ "app_email": "luis@example.com",
+ "app_license": "MIT",
+ "app_version": "0.0.1"
+}

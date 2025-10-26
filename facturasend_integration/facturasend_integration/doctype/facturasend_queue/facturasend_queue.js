@@ -1,0 +1,230 @@
+// Copyright (c) 2025, Luis and contributors
+// For license information, please see license.txt
+
+frappe.ui.form.on('FacturaSend Queue', {
+	refresh: function(frm) {
+		// Botón para cargar documentos pendientes
+		frm.add_custom_button(__('Cargar Documentos'), function() {
+			load_pending_documents(frm);
+		});
+
+		// Botón para enviar lote
+		frm.add_custom_button(__('Enviar Seleccionados'), function() {
+			send_selected_documents(frm);
+		}, __('Acciones'));
+
+		// Botón para descargar KUDEs
+		frm.add_custom_button(__('Descargar KUDEs'), function() {
+			download_kudes(frm);
+		}, __('Acciones'));
+
+		// Cargar documentos al abrir el formulario
+		if (!frm.doc.__islocal) {
+			load_pending_documents(frm);
+		}
+	}
+});
+
+function load_pending_documents(frm) {
+	frappe.call({
+		method: 'facturasend_integration.facturasend_integration.api.get_pending_documents',
+		args: {
+			tipo_documento: frm.doc.tipo_documento,
+			desde_fecha: frm.doc.desde_fecha,
+			hasta_fecha: frm.doc.hasta_fecha
+		},
+		callback: function(r) {
+			if (r.message) {
+				render_document_list(frm, r.message);
+			}
+		}
+	});
+}
+
+function render_document_list(frm, documents) {
+	let html = `
+		<div class="facturasend-documents">
+			<table class="table table-bordered">
+				<thead>
+					<tr>
+						<th><input type="checkbox" id="select-all"></th>
+						<th>Documento</th>
+						<th>Cliente</th>
+						<th>Fecha</th>
+						<th>Total</th>
+						<th>Estado FS</th>
+						<th>CDC</th>
+						<th>Acciones</th>
+					</tr>
+				</thead>
+				<tbody id="documents-tbody">
+	`;
+
+	documents.forEach(function(doc) {
+		let status_badge = '';
+		if (doc.facturasend_estado) {
+			let color = doc.facturasend_estado === 'Aprobado' ? 'green' : 
+			           doc.facturasend_estado === 'Rechazado' ? 'red' : 
+			           doc.facturasend_estado === 'Error' ? 'orange' : 'blue';
+			status_badge = `<span class="badge" style="background-color: ${color}">${doc.facturasend_estado}</span>`;
+		} else {
+			status_badge = `<span class="badge" style="background-color: gray">Pendiente</span>`;
+		}
+
+		let retry_btn = '';
+		if (doc.facturasend_estado === 'Error' || doc.facturasend_estado === 'Rechazado') {
+			retry_btn = `<button class="btn btn-xs btn-warning retry-btn" data-doctype="${doc.doctype}" data-name="${doc.name}">Reintentar</button>`;
+		}
+
+		html += `
+			<tr>
+				<td><input type="checkbox" class="doc-checkbox" data-doctype="${doc.doctype}" data-name="${doc.name}"></td>
+				<td><a href="/app/${doc.doctype.toLowerCase().replace(/ /g, '-')}/${doc.name}">${doc.name}</a></td>
+				<td>${doc.customer_name || ''}</td>
+				<td>${doc.posting_date || ''}</td>
+				<td>${format_currency(doc.grand_total || 0, doc.currency)}</td>
+				<td>${status_badge}</td>
+				<td>${doc.facturasend_cdc || ''}</td>
+				<td>${retry_btn}</td>
+			</tr>
+		`;
+	});
+
+	html += `
+				</tbody>
+			</table>
+		</div>
+	`;
+
+	frm.fields_dict.section_break_3.$wrapper.html(html);
+
+	// Event handlers
+	$('#select-all').on('change', function() {
+		$('.doc-checkbox').prop('checked', $(this).is(':checked'));
+	});
+
+	$('.retry-btn').on('click', function() {
+		let doctype = $(this).data('doctype');
+		let name = $(this).data('name');
+		retry_document(doctype, name);
+	});
+}
+
+function send_selected_documents(frm) {
+	let selected = [];
+	$('.doc-checkbox:checked').each(function() {
+		selected.push({
+			doctype: $(this).data('doctype'),
+			name: $(this).data('name')
+		});
+	});
+
+	if (selected.length === 0) {
+		frappe.msgprint(__('Por favor seleccione al menos un documento'));
+		return;
+	}
+
+	if (selected.length > 50) {
+		frappe.msgprint(__('No puede enviar más de 50 documentos a la vez'));
+		return;
+	}
+
+	// Validar que todos sean del mismo tipo
+	let tipo = selected[0].doctype;
+	let all_same = selected.every(doc => doc.doctype === tipo);
+	if (!all_same) {
+		frappe.msgprint(__('Todos los documentos deben ser del mismo tipo'));
+		return;
+	}
+
+	frappe.confirm(
+		__('¿Está seguro de enviar {0} documento(s) a FacturaSend?', [selected.length]),
+		function() {
+			frappe.call({
+				method: 'facturasend_integration.facturasend_integration.api.send_batch_to_facturasend',
+				args: {
+					documents: selected
+				},
+				callback: function(r) {
+					if (r.message && r.message.success) {
+						frappe.msgprint(__('Documentos enviados exitosamente'));
+						load_pending_documents(frm);
+						
+						// Descargar KUDEs automáticamente
+						if (r.message.lote_id) {
+							download_lote_kude(r.message.lote_id);
+						}
+					} else {
+						frappe.msgprint(__('Error al enviar documentos: ') + (r.message.error || 'Error desconocido'));
+					}
+				}
+			});
+		}
+	);
+}
+
+function retry_document(doctype, name) {
+	frappe.confirm(
+		__('¿Reintentar envío del documento {0}?', [name]),
+		function() {
+			frappe.call({
+				method: 'facturasend_integration.facturasend_integration.api.send_batch_to_facturasend',
+				args: {
+					documents: [{doctype: doctype, name: name}]
+				},
+				callback: function(r) {
+					if (r.message && r.message.success) {
+						frappe.msgprint(__('Documento reenviado exitosamente'));
+						frappe.ui.form.get_form('FacturaSend Queue').reload_doc();
+					} else {
+						frappe.msgprint(__('Error al reenviar: ') + (r.message.error || 'Error desconocido'));
+					}
+				}
+			});
+		}
+	);
+}
+
+function download_kudes(frm) {
+	let selected = [];
+	$('.doc-checkbox:checked').each(function() {
+		selected.push({
+			doctype: $(this).data('doctype'),
+			name: $(this).data('name')
+		});
+	});
+
+	if (selected.length === 0) {
+		frappe.msgprint(__('Por favor seleccione al menos un documento'));
+		return;
+	}
+
+	frappe.call({
+		method: 'facturasend_integration.facturasend_integration.api.download_batch_kude',
+		args: {
+			documents: selected
+		},
+		callback: function(r) {
+			if (r.message && r.message.success) {
+				// Descargar archivo PDF
+				window.open(r.message.pdf_url, '_blank');
+			} else {
+				frappe.msgprint(__('Error al descargar KUDEs: ') + (r.message.error || 'Error desconocido'));
+			}
+		}
+	});
+}
+
+function download_lote_kude(lote_id) {
+	frappe.call({
+		method: 'facturasend_integration.facturasend_integration.api.download_lote_kude',
+		args: {
+			lote_id: lote_id
+		},
+		callback: function(r) {
+			if (r.message && r.message.pdf_url) {
+				window.open(r.message.pdf_url, '_blank');
+			}
+		}
+	});
+}

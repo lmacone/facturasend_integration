@@ -1,0 +1,39 @@
+[
+	{
+		"dt": "User",
+		"fieldname": "facturasend_section",
+		"fieldtype": "Section Break",
+		"label": "Datos FacturaSend",
+		"insert_after": "document_follow_notifications_enabled",
+		"collapsible": 1
+	},
+	{
+		"dt": "User",
+		"fieldname": "facturasend_documento_tipo",
+		"fieldtype": "Select",
+		"label": "Tipo de Documento",
+		"options": "1 - Cédula\n2 - Pasaporte\n3 - Otro",
+		"default": "1 - Cédula",
+		"insert_after": "facturasend_section"
+	},
+	{
+		"dt": "User",
+		"fieldname": "facturasend_documento_numero",
+		"fieldtype": "Data",
+		"label": "Número de Documento",
+		"insert_after": "facturasend_documento_tipo"
+	},
+	{
+		"dt": "User",
+		"fieldname": "column_break_fs1",
+		"fieldtype": "Column Break",
+		"insert_after": "facturasend_documento_numero"
+	},
+	{
+		"dt": "User",
+		"fieldname": "facturasend_cargo",
+		"fieldtype": "Data",
+		"label": "Cargo",
+		"insert_after": "column_break_fs1"
+	}
+]
