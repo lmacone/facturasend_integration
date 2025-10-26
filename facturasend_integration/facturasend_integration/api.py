@@ -301,29 +301,35 @@ def convert_document_to_facturasend(doc, settings):
 		if es_contribuyente:
 			cliente_data["ruc"] = customer.get("facturasend_ruc", "")
 		
-		# Agregar dirección desde Address vinculado al cliente
-		address = get_customer_primary_address(customer.name)
-		if address:
-			address_line = address.get("address_line1", "")
-			if address.get("address_line2"):
-				address_line += " " + address.get("address_line2")
+		# Agregar dirección SOLO si tienes ciudad y distrito (campos obligatorios)
+		# Si tipoOperacion != 4, ciudad y distrito son obligatorios
+		tiene_ciudad = customer.get("facturasend_ciudad")
+		tiene_distrito = customer.get("facturasend_distrito")
+		
+		# Solo agregar dirección si tienes los campos mínimos requeridos
+		if tiene_ciudad and tiene_distrito:
+			address = get_customer_primary_address(customer.name)
+			if address:
+				address_line = address.get("address_line1", "")
+				if address.get("address_line2"):
+					address_line += " " + address.get("address_line2")
+				
+				if address_line:
+					cliente_data["direccion"] = address_line
+					cliente_data["numeroCasa"] = customer.get("facturasend_numero_casa", "0")  # Usar custom field o default "0"
 			
-			if address_line:
-				cliente_data["direccion"] = address_line
-				cliente_data["numeroCasa"] = ""  # ERPNext no tiene campo separado para número de casa
-		
-		# Agregar ubicación si está disponible en custom fields
-		if customer.get("facturasend_departamento"):
-			cliente_data["departamento"] = customer.get("facturasend_departamento")
-			cliente_data["departamentoDescripcion"] = customer.get("facturasend_departamento_desc", "")
-		
-		if customer.get("facturasend_distrito"):
-			cliente_data["distrito"] = customer.get("facturasend_distrito")
-			cliente_data["distritoDescripcion"] = customer.get("facturasend_distrito_desc", "")
-		
-		if customer.get("facturasend_ciudad"):
-			cliente_data["ciudad"] = customer.get("facturasend_ciudad")
+			# Agregar ubicación (ahora sabemos que existen)
+			cliente_data["ciudad"] = tiene_ciudad
 			cliente_data["ciudadDescripcion"] = customer.get("facturasend_ciudad_desc", "")
+			cliente_data["distrito"] = tiene_distrito
+			cliente_data["distritoDescripcion"] = customer.get("facturasend_distrito_desc", "")
+			
+			# Departamento es opcional pero lo agregamos si existe
+			if customer.get("facturasend_departamento"):
+				cliente_data["departamento"] = customer.get("facturasend_departamento")
+				cliente_data["departamentoDescripcion"] = customer.get("facturasend_departamento_desc", "")
+		
+		# Si no tiene ciudad/distrito, NO enviar dirección ni ubicación
 		
 		# Obtener datos del usuario
 		user = frappe.get_doc("User", doc.owner)
