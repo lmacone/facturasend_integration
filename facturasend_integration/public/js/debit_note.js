@@ -70,7 +70,13 @@ function download_kude(frm) {
 		},
 		callback: function(r) {
 			if (r.message && r.message.success) {
-				window.open(r.message.pdf_url, '_blank');
+				// Descargar PDF en lugar de abrirlo
+				let link = document.createElement('a');
+				link.href = r.message.pdf_url;
+				link.download = `KUDE_ND_${frm.doc.name}.pdf`;
+				document.body.appendChild(link);
+				link.click();
+				document.body.removeChild(link);
 			} else {
 				frappe.msgprint(__('Error al descargar KUDE: ') + (r.message.error || 'Error desconocido'));
 			}
@@ -86,7 +92,15 @@ function download_kude_by_cdcs(cdcs) {
 		},
 		callback: function(r) {
 			if (r.message && r.message.pdf_url) {
-				window.open(r.message.pdf_url, '_blank');
+				// Descargar PDF en lugar de abrirlo
+				let timestamp = new Date().getTime();
+				let link = document.createElement('a');
+				link.href = r.message.pdf_url;
+				link.download = `KUDE_ND_${timestamp}.pdf`;
+				document.body.appendChild(link);
+				link.click();
+				document.body.removeChild(link);
+				
 				frappe.show_alert({
 					message: __('KUDE descargado exitosamente'),
 					indicator: 'green'

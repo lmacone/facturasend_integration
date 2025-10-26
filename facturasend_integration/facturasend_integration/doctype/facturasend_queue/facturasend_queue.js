@@ -270,8 +270,19 @@ function download_kudes(frm) {
 		},
 		callback: function(r) {
 			if (r.message && r.message.success) {
-				// Descargar archivo PDF
-				window.open(r.message.pdf_url, '_blank');
+				// Descargar PDF en lugar de abrirlo
+				let timestamp = new Date().getTime();
+				let link = document.createElement('a');
+				link.href = r.message.pdf_url;
+				link.download = `KUDEs_${timestamp}.pdf`;
+				document.body.appendChild(link);
+				link.click();
+				document.body.removeChild(link);
+				
+				frappe.show_alert({
+					message: __('KUDEs descargados exitosamente'),
+					indicator: 'green'
+				});
 			} else {
 				frappe.msgprint(__('Error al descargar KUDEs: ') + (r.message.error || 'Error desconocido'));
 			}
@@ -399,7 +410,15 @@ function download_kude_by_cdcs(cdcs) {
 		},
 		callback: function(r) {
 			if (r.message && r.message.pdf_url) {
-				window.open(r.message.pdf_url, '_blank');
+				// Descargar PDF en lugar de abrirlo
+				let timestamp = new Date().getTime();
+				let link = document.createElement('a');
+				link.href = r.message.pdf_url;
+				link.download = `KUDEs_${timestamp}.pdf`;
+				document.body.appendChild(link);
+				link.click();
+				document.body.removeChild(link);
+				
 				frappe.show_alert({
 					message: __('KUDEs descargados exitosamente'),
 					indicator: 'green'
