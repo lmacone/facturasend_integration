@@ -540,7 +540,13 @@ def send_to_facturasend_api(batch_data, settings):
 		# Log completo para debugging
 		frappe.log_error(f"URL: {url}\n\nHeaders: {json.dumps({k: v[:20] + '...' if k == 'Authorization' else v for k, v in headers.items()}, indent=2)}\n\nJSON Completo:\n{json.dumps(batch_data, indent=2, ensure_ascii=False)}", "FacturaSend Request")
 		
-		response = requests.post(url, json=batch_data, headers=headers, timeout=30)
+		# Enviar como JSON en el body (equivalente a axios.post(url, data, {headers}))
+		response = requests.post(
+			url, 
+			data=json.dumps(batch_data, ensure_ascii=False).encode('utf-8'),
+			headers=headers, 
+			timeout=30
+		)
 		
 		# Log de respuesta
 		response_text = response.text
