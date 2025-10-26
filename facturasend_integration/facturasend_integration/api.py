@@ -714,10 +714,10 @@ def update_documents_after_send(documents, response, log_name):
 		if i < len(de_list):
 			de_info = de_list[i]
 			doc.facturasend_cdc = de_info.get('cdc', '')
-			doc.facturasend_estado = "Enviado"
+			doc.facturasend_estado = "Generado DE"  # Estado 0 - Documento generado exitosamente
 			doc.facturasend_lote_id = str(lote_id)
 			doc.facturasend_fecha_envio = now_datetime()
-			doc.facturasend_mensaje_estado = f"Enviado exitosamente. CDC: {de_info.get('cdc', '')}"
+			doc.facturasend_mensaje_estado = f"Documento generado exitosamente. CDC: {de_info.get('cdc', '')}"
 		else:
 			doc.facturasend_estado = "Error"
 			doc.facturasend_mensaje_estado = "No se recibió respuesta del servidor"
@@ -858,11 +858,11 @@ def check_document_status():
 			frappe.log_error("No se encontró FacturaSend Settings", "FacturaSend Status Check")
 			return
 		
-		# Buscar documentos enviados que necesitan actualización
+		# Buscar documentos con estado "Generado DE" (0) que necesitan actualización
 		pending_docs = frappe.get_all("Sales Invoice",
 			filters={
 				"docstatus": 1,
-				"facturasend_estado": ["in", ["Enviado"]],
+				"facturasend_estado": ["in", ["Generado DE"]],
 				"facturasend_cdc": ["!=", ""]
 			},
 			fields=["name", "facturasend_cdc"],
@@ -909,8 +909,9 @@ def get_document_status_by_cdc(cdc, settings):
 			"Content-Type": "application/json"
 		}
 		
+		# El endpoint requiere cdcList como array, no cdc individual
 		payload = {
-			"cdc": cdc
+			"cdcList": [cdc]
 		}
 		
 		frappe.log_error(f"POST {url}\nPayload: {json.dumps(payload, indent=2)}", "FacturaSend Status Query Request")
@@ -920,7 +921,18 @@ def get_document_status_by_cdc(cdc, settings):
 		frappe.log_error(f"Status: {response.status_code}\nResponse: {response.text}", "FacturaSend Status Query Response")
 		
 		if response.status_code == 200:
-			return response.json()
+			response_data = response.json()
+			# La respuesta contiene un array de estados, extraer el primero
+			if response_data.get('success') and response_data.get('result'):
+				# Retornar el primer resultado con la estructura esperada
+				result = response_data.get('result', [{}])[0] if isinstance(response_data.get('result'), list) else response_data.get('result', {})
+				return {
+					"success": True,
+					"estado": result.get('estado'),
+					"estadoDescripcion": result.get('estadoDescripcion'),
+					"message": response_data.get('message', '')
+				}
+			return response_data
 		else:
 			return {"success": False, "error": f"Error HTTP {response.status_code}: {response.text}"}
 			
@@ -939,14 +951,28 @@ def update_single_document_status(doc_name, status_data):
 		doc = frappe.get_doc("Sales Invoice", doc_name)
 		
 		# Mapear estado de FacturaSend a nuestro estado
-		estado_fs = status_data.get('estado', 'Enviado')
+		# 0 = Generado DE (documento creado exitosamente)
+		# 1 = Enviado en Lote (enviado para aprobación)
+		# 2 = Aprobado (aprobado por SET)
+		# 3 = Aprobado con observación
+		# 4 = Rechazado
+		# 88 = Inexistente
+		# 99 = Cancelado
+		estado_fs = status_data.get('estado', 'Generado DE')
 		
-		if estado_fs == 'Aprobado' or estado_fs == '2':
+		if estado_fs == '2' or estado_fs == 'Aprobado':
 			doc.facturasend_estado = 'Aprobado'
-		elif estado_fs == 'Rechazado' or estado_fs == '4':
+		elif estado_fs == '3':
+			doc.facturasend_estado = 'Aprobado con observación'
+		elif estado_fs == '4' or estado_fs == 'Rechazado':
 			doc.facturasend_estado = 'Rechazado'
+		elif estado_fs == '1':
+			doc.facturasend_estado = 'Enviado en Lote'
+		elif estado_fs == '99':
+			doc.facturasend_estado = 'Cancelado'
 		else:
-			doc.facturasend_estado = 'Enviado'
+			# Mantener como Generado DE si no hay cambio de estado
+			doc.facturasend_estado = 'Generado DE'
 		
 		# Actualizar mensaje con la información del estado
 		mensaje_partes = []
@@ -955,7 +981,7 @@ def update_single_document_status(doc_name, status_data):
 		if status_data.get('estadoDescripcion'):
 			mensaje_partes.append(f"Estado: {status_data.get('estadoDescripcion')}")
 		
-		doc.facturasend_mensaje_estado = ' - '.join(mensaje_partes) if mensaje_partes else estado_fs
+		doc.facturasend_mensaje_estado = ' - '.join(mensaje_partes) if mensaje_partes else str(estado_fs)
 		doc.save(ignore_permissions=True)
 		
 		frappe.db.commit()
