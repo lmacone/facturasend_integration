@@ -177,6 +177,7 @@
 	},
 	{
 		"doctype": "Custom Field",
+		"name": "Sales Invoice-facturasend_observacion",
 		"dt": "Sales Invoice",
 		"fieldname": "facturasend_observacion",
 		"fieldtype": "Small Text",
