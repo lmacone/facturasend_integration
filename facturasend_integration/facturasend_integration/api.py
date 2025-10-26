@@ -747,22 +747,28 @@ def download_batch_kude(documents):
 		if not cdcs:
 			return {"success": False, "error": "Los documentos seleccionados no tienen CDC"}
 		
-		# Llamar a la API para obtener PDFs
-		url = f"{settings.base_url}/{settings.tenant_id}/kude"
+		# Llamar a la API para obtener PDFs - POST /de/pdf según documentación
+		url = f"{settings.base_url}/{settings.tenant_id}/de/pdf"
 		
 		api_key = settings.get_password('api_key')
 		if not api_key:
 			return {"success": False, "error": "API Key no configurado"}
 		
 		headers = {
-			"Authorization": f"Bearer {api_key}"
+			"Authorization": f"Bearer {api_key}",
+			"Content-Type": "application/json"
 		}
 		
-		params = {
-			"cdcs": ",".join(cdcs)
+		# Enviar CDCs en el body como array
+		payload = {
+			"cdcList": cdcs
 		}
 		
-		response = requests.get(url, headers=headers, params=params, timeout=30)
+		frappe.log_error(f"POST {url}\nPayload: {json.dumps(payload, indent=2)}", "FacturaSend KUDE Request")
+		
+		response = requests.post(url, json=payload, headers=headers, timeout=30)
+		
+		frappe.log_error(f"Status: {response.status_code}\nResponse: {response.text[:500]}", "FacturaSend KUDE Response")
 		
 		if response.status_code == 200:
 			# Guardar PDF temporalmente y retornar URL
@@ -789,17 +795,41 @@ def download_lote_kude(lote_id):
 	try:
 		settings = get_facturasend_settings()
 		
-		url = f"{settings.base_url}/{settings.tenant_id}/lote/{lote_id}/kude"
+		# Obtener CDCs de todos los documentos del lote
+		docs = frappe.get_all("Sales Invoice",
+			filters={
+				"facturasend_lote_id": lote_id,
+				"facturasend_cdc": ["!=", ""]
+			},
+			fields=["facturasend_cdc"]
+		)
+		
+		if not docs:
+			return {"success": False, "error": "No se encontraron documentos con CDC para este lote"}
+		
+		cdcs = [doc.facturasend_cdc for doc in docs]
+		
+		# Usar el endpoint POST /de/pdf según documentación
+		url = f"{settings.base_url}/{settings.tenant_id}/de/pdf"
 		
 		api_key = settings.get_password('api_key')
 		if not api_key:
 			return {"success": False, "error": "API Key no configurado"}
 		
 		headers = {
-			"Authorization": f"Bearer {api_key}"
+			"Authorization": f"Bearer {api_key}",
+			"Content-Type": "application/json"
 		}
 		
-		response = requests.get(url, headers=headers, timeout=30)
+		payload = {
+			"cdcList": cdcs
+		}
+		
+		frappe.log_error(f"POST {url}\nLote: {lote_id}\nCDCs: {len(cdcs)}", "FacturaSend Lote KUDE Request")
+		
+		response = requests.post(url, json=payload, headers=headers, timeout=30)
+		
+		frappe.log_error(f"Status: {response.status_code}", "FacturaSend Lote KUDE Response")
 		
 		if response.status_code == 200:
 			import base64
