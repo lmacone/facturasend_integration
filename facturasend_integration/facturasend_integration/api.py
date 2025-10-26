@@ -413,10 +413,13 @@ def send_to_facturasend_api(batch_data, settings):
 			"Content-Type": "application/json"
 		}
 		
-		frappe.log_error(f"Enviando a URL: {url}", "FacturaSend Debug")
-		frappe.log_error(f"Datos: {json.dumps(batch_data[:1])}", "FacturaSend Debug")  # Solo primer documento
+		# Log completo para debugging
+		frappe.log_error(f"URL: {url}\n\nHeaders: {json.dumps({k: v[:20] + '...' if k == 'Authorization' else v for k, v in headers.items()}, indent=2)}\n\nJSON Completo:\n{json.dumps(batch_data, indent=2, ensure_ascii=False)}", "FacturaSend Request")
 		
 		response = requests.post(url, json=batch_data, headers=headers, timeout=30)
+		
+		# Log de respuesta
+		frappe.log_error(f"Status: {response.status_code}\n\nRespuesta:\n{response.text}", "FacturaSend Response")
 		
 		if response.status_code == 200:
 			return response.json()
