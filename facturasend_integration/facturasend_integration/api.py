@@ -458,6 +458,16 @@ def prepare_payment_condition(doc):
 		total_cuotas = len(doc.payment_schedule)
 		cuotas_info = []
 		
+		# Calcular días totales del crédito
+		primera_fecha = doc.payment_schedule[0].due_date if doc.payment_schedule else doc.posting_date
+		ultima_fecha = doc.payment_schedule[-1].due_date if doc.payment_schedule else doc.posting_date
+		
+		# Calcular diferencia en días
+		if hasattr(primera_fecha, 'toordinal') and hasattr(ultima_fecha, 'toordinal'):
+			dias_plazo = (ultima_fecha.toordinal() - getdate(doc.posting_date).toordinal())
+		else:
+			dias_plazo = 30  # Default
+		
 		for cuota in doc.payment_schedule:
 			# Para PYG, montos sin decimales
 			monto_cuota = cuota.payment_amount
@@ -466,8 +476,7 @@ def prepare_payment_condition(doc):
 			
 			cuotas_info.append({
 				"moneda": doc.currency,
-				"monto": monto_cuota,
-				"vencimiento": cuota.due_date.strftime("%Y-%m-%d") if hasattr(cuota.due_date, 'strftime') else str(cuota.due_date)
+				"monto": monto_cuota
 			})
 		
 		# montoEntrega sin decimales para PYG
@@ -477,7 +486,7 @@ def prepare_payment_condition(doc):
 		
 		condicion["credito"] = {
 			"tipo": 1,  # Plazo
-			"plazo": f"{total_cuotas} cuotas",
+			"plazo": f"{dias_plazo} días",
 			"cuotas": total_cuotas,
 			"montoEntrega": monto_entrega_num,
 			"infoCuotas": cuotas_info
