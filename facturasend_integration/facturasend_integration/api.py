@@ -208,30 +208,40 @@ def send_batch_to_facturasend(documents):
 		batch_data = []
 		conversion_errors = []
 		
+		frappe.log_error(f"Procesando {len(documents)} documentos: {[d['name'] for d in documents]}", "FacturaSend Batch Processing")
+		
 		for doc_info in documents:
 			doc = frappe.get_doc("Sales Invoice", doc_info['name'])
 			
 			# Verificar si ya está aprobado (no reintentar documentos exitosos)
 			if doc.facturasend_estado == "Aprobado":
-				conversion_errors.append(f"{doc.name}: Ya está aprobado en FacturaSend")
+				error_msg = f"{doc.name}: Ya está aprobado en FacturaSend"
+				conversion_errors.append(error_msg)
+				frappe.log_error(error_msg, "FacturaSend Skip Document")
 				continue
 			
 			# Verificar reintentos solo si tiene error
 			if doc.facturasend_estado == "Error" and doc.facturasend_reintentos and doc.facturasend_reintentos >= settings.max_retries:
-				conversion_errors.append(f"{doc.name}: Máximo de reintentos alcanzado ({doc.facturasend_reintentos}/{settings.max_retries})")
+				error_msg = f"{doc.name}: Máximo de reintentos alcanzado ({doc.facturasend_reintentos}/{settings.max_retries})"
+				conversion_errors.append(error_msg)
+				frappe.log_error(error_msg, "FacturaSend Skip Document")
 				continue
 			
 			# Convertir documento a formato FacturaSend
 			try:
+				frappe.log_error(f"Convirtiendo {doc.name} (estado: {doc.facturasend_estado}, reintentos: {doc.facturasend_reintentos})", "FacturaSend Converting")
 				fs_data = convert_document_to_facturasend(doc, settings)
 				if fs_data:
 					batch_data.append(fs_data)
+					frappe.log_error(f"{doc.name} convertido exitosamente", "FacturaSend Converted OK")
 				else:
 					conversion_errors.append(f"{doc.name}: Conversión retornó None")
 			except Exception as e:
 				error_msg = f"{doc.name}: {str(e)}"
 				conversion_errors.append(error_msg)
 				frappe.log_error(frappe.get_traceback(), f"Error convirtiendo {doc.name}")
+		
+		frappe.log_error(f"Resultado: {len(batch_data)} documentos listos para enviar, {len(conversion_errors)} errores", "FacturaSend Batch Summary")
 		
 		if not batch_data:
 			error_detail = "\n".join(conversion_errors) if conversion_errors else "Razón desconocida"
@@ -811,39 +821,57 @@ def download_lote_kude(lote_id):
 def check_document_status():
 	"""Scheduled job para consultar estados de documentos enviados"""
 	
-	# Obtener configuración
-	settings = get_facturasend_settings()
-	if not settings:
-		return
-	
-	# Buscar documentos enviados que necesitan actualización
-	pending_docs = frappe.get_all("Sales Invoice",
-		filters={
-			"docstatus": 1,
-			"facturasend_estado": ["in", ["Enviado"]],
-			"facturasend_lote_id": ["!=", ""]
-		},
-		fields=["name", "facturasend_lote_id", "facturasend_cdc"],
-		limit=100
-	)
-	
-	# Agrupar por lote_id
-	lotes = {}
-	for doc in pending_docs:
-		lote_id = doc.facturasend_lote_id
-		if lote_id not in lotes:
-			lotes[lote_id] = []
-		lotes[lote_id].append(doc)
-	
-	# Consultar estado de cada lote
-	for lote_id, docs in lotes.items():
-		try:
-			status_data = get_lote_status(lote_id, settings)
-			
-			if status_data and status_data.get('success'):
-				update_documents_status(docs, status_data)
-		except Exception as e:
-			frappe.log_error(frappe.get_traceback(), f"Error consultando estado del lote {lote_id}")
+	try:
+		# Obtener configuración
+		settings = get_facturasend_settings()
+		if not settings:
+			frappe.log_error("No se encontró FacturaSend Settings", "FacturaSend Status Check")
+			return
+		
+		# Buscar documentos enviados que necesitan actualización
+		pending_docs = frappe.get_all("Sales Invoice",
+			filters={
+				"docstatus": 1,
+				"facturasend_estado": ["in", ["Enviado"]],
+				"facturasend_lote_id": ["!=", ""]
+			},
+			fields=["name", "facturasend_lote_id", "facturasend_cdc"],
+			limit=100
+		)
+		
+		frappe.log_error(f"Encontrados {len(pending_docs)} documentos pendientes de actualización", "FacturaSend Status Check")
+		
+		if not pending_docs:
+			return
+		
+		# Agrupar por lote_id
+		lotes = {}
+		for doc in pending_docs:
+			lote_id = doc.facturasend_lote_id
+			if lote_id not in lotes:
+				lotes[lote_id] = []
+			lotes[lote_id].append(doc)
+		
+		frappe.log_error(f"Consultando estado de {len(lotes)} lotes: {list(lotes.keys())}", "FacturaSend Status Check")
+		
+		# Consultar estado de cada lote
+		for lote_id, docs in lotes.items():
+			try:
+				frappe.log_error(f"Consultando lote {lote_id} con {len(docs)} documentos", "FacturaSend Status Check Lote")
+				status_data = get_lote_status(lote_id, settings)
+				
+				if status_data and status_data.get('success'):
+					frappe.log_error(f"Lote {lote_id} consultado exitosamente", "FacturaSend Status Check OK")
+					update_documents_status(docs, status_data)
+				else:
+					frappe.log_error(f"Error consultando lote {lote_id}: {status_data.get('error', 'Unknown')}", "FacturaSend Status Check Error")
+			except Exception as e:
+				frappe.log_error(frappe.get_traceback(), f"Error consultando estado del lote {lote_id}")
+		
+		frappe.log_error(f"Consulta de estados completada para {len(lotes)} lotes", "FacturaSend Status Check Complete")
+		
+	except Exception as e:
+		frappe.log_error(frappe.get_traceback(), "FacturaSend Status Check Fatal Error")
 
 
 def get_lote_status(lote_id, settings):
@@ -860,14 +888,19 @@ def get_lote_status(lote_id, settings):
 			"Authorization": f"Bearer {api_key}"
 		}
 		
+		frappe.log_error(f"GET {url}", "FacturaSend Status Query Request")
+		
 		response = requests.get(url, headers=headers, timeout=30)
+		
+		frappe.log_error(f"Status: {response.status_code}\nResponse: {response.text}", "FacturaSend Status Query Response")
 		
 		if response.status_code == 200:
 			return response.json()
 		else:
-			return {"success": False, "error": f"Error HTTP {response.status_code}"}
+			return {"success": False, "error": f"Error HTTP {response.status_code}: {response.text}"}
 			
 	except Exception as e:
+		frappe.log_error(frappe.get_traceback(), "FacturaSend Status Query Error")
 		return {"success": False, "error": str(e)}
 
 
