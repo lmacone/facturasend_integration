@@ -600,9 +600,52 @@ def send_to_facturasend_api(batch_data, settings):
 		frappe.log_error(f"Status: {response.status_code}\n\nRespuesta:\n{response_text}", "FacturaSend Response")
 		
 		if response.status_code == 200:
-			return response.json()
+			response_data = response.json()
+			# Verificar si hay errores en la respuesta exitosa
+			if not response_data.get('success') and response_data.get('errores'):
+				# Construir mensaje de error detallado
+				error_msg = response_data.get('error', 'Error desconocido')
+				errores_detalle = []
+				for err in response_data.get('errores', []):
+					index = err.get('index', 'N/A')
+					error_txt = err.get('error', 'Sin detalle')
+					errores_detalle.append(f"[Documento {index}] {error_txt}")
+				
+				error_completo = f"{error_msg}\n\nDetalles:\n" + "\n".join(errores_detalle)
+				
+				return {
+					"success": False,
+					"error": error_completo,
+					"errores": response_data.get('errores', []),
+					"response": response_text
+				}
+			
+			return response_data
 		else:
 			# Incluir response completo en el error
+			try:
+				error_data = response.json()
+				# Si el response tiene errores detallados
+				if error_data.get('errores'):
+					error_msg = error_data.get('error', f'Error HTTP {response.status_code}')
+					errores_detalle = []
+					for err in error_data.get('errores', []):
+						index = err.get('index', 'N/A')
+						error_txt = err.get('error', 'Sin detalle')
+						errores_detalle.append(f"[Documento {index}] {error_txt}")
+					
+					error_completo = f"{error_msg}\n\nDetalles:\n" + "\n".join(errores_detalle)
+					
+					return {
+						"success": False,
+						"error": error_completo,
+						"errores": error_data.get('errores', []),
+						"status_code": response.status_code,
+						"response": response_text
+					}
+			except:
+				pass
+			
 			return {
 				"success": False,
 				"error": f"Error HTTP {response.status_code}: {response_text}",

@@ -174,23 +174,41 @@ function send_selected_documents(frm) {
 							download_lote_kude(r.message.lote_id);
 						}
 					} else {
-						// Mostrar error detallado
-						let error_msg = r.message.error || 'Error desconocido';
+						// Construir mensaje de error detallado
+						let error_html = '<div style="max-height: 400px; overflow-y: auto;">';
+						error_html += '<p><strong>' + (r.message.error || 'Error desconocido') + '</strong></p>';
 						
-						// Si hay detalles adicionales, mostrarlos
+						// Si hay errores detallados del API
+						if (r.message.errores && r.message.errores.length > 0) {
+							error_html += '<div class="alert alert-danger"><strong>Errores de FacturaSend:</strong><ul>';
+							r.message.errores.forEach(function(err) {
+								error_html += '<li><strong>Documento ' + err.index + ':</strong> ' + err.error + '</li>';
+							});
+							error_html += '</ul></div>';
+						}
+						
+						// Si hay detalles adicionales de conversión
 						if (r.message.details && r.message.details.length > 0) {
-							error_msg += '\n\nDetalles:\n' + r.message.details.join('\n');
+							error_html += '<div class="alert alert-warning"><strong>Detalles:</strong><ul>';
+							r.message.details.forEach(function(detail) {
+								error_html += '<li>' + detail + '</li>';
+							});
+							error_html += '</ul></div>';
 						}
 						
-						// Si hay response de la API, mostrarlo
-						if (r.message.response) {
-							error_msg += '\n\nRespuesta API:\n' + r.message.response;
-						}
+						error_html += '</div>';
 						
 						frappe.msgprint({
 							title: __('Error al enviar documentos'),
-							message: error_msg,
-							indicator: 'red'
+							message: error_html,
+							indicator: 'red',
+							primary_action: {
+								label: __('Ver en Consola'),
+								action: function() {
+									console.error('FacturaSend Error:', r.message);
+									frappe.msgprint(__('Error mostrado en la consola del navegador'));
+								}
+							}
 						});
 						
 						// También mostrar en consola para debugging
