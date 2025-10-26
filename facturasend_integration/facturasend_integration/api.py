@@ -714,10 +714,10 @@ def update_documents_after_send(documents, response, log_name):
 		if i < len(de_list):
 			de_info = de_list[i]
 			doc.facturasend_cdc = de_info.get('cdc', '')
-			doc.facturasend_estado = "Generado DE"  # Estado 0 - Documento generado exitosamente
+			doc.facturasend_estado = "Enviado"  # Estado 0 = Generado DE - Documento generado exitosamente
 			doc.facturasend_lote_id = str(lote_id)
 			doc.facturasend_fecha_envio = now_datetime()
-			doc.facturasend_mensaje_estado = f"Documento generado exitosamente. CDC: {de_info.get('cdc', '')}"
+			doc.facturasend_mensaje_estado = f"Generado DE (Estado 0) - CDC: {de_info.get('cdc', '')}"
 		else:
 			doc.facturasend_estado = "Error"
 			doc.facturasend_mensaje_estado = "No se recibió respuesta del servidor"
@@ -858,11 +858,11 @@ def check_document_status():
 			frappe.log_error("No se encontró FacturaSend Settings", "FacturaSend Status Check")
 			return
 		
-		# Buscar documentos con estado "Generado DE" (0) que necesitan actualización
+		# Buscar documentos con estado "Enviado" (Estado 0 = Generado DE) que necesitan actualización
 		pending_docs = frappe.get_all("Sales Invoice",
 			filters={
 				"docstatus": 1,
-				"facturasend_estado": ["in", ["Generado DE"]],
+				"facturasend_estado": ["in", ["Enviado"]],
 				"facturasend_cdc": ["!=", ""]
 			},
 			fields=["name", "facturasend_cdc"],
@@ -946,11 +946,8 @@ def update_single_document_status(doc_name, status_data):
 	
 	try:
 		# La respuesta tiene la estructura:
-		# {"success": true, "message": "Consulta exitosa", "estado": "Aprobado", ...}
-		
-		doc = frappe.get_doc("Sales Invoice", doc_name)
-		
-		# Mapear estado de FacturaSend a nuestro estado
+		# {"success": true, "message": "Consulta exitosa", "estado": "2", ...}
+		# Estados de FacturaSend:
 		# 0 = Generado DE (documento creado exitosamente)
 		# 1 = Enviado en Lote (enviado para aprobación)
 		# 2 = Aprobado (aprobado por SET)
@@ -958,30 +955,41 @@ def update_single_document_status(doc_name, status_data):
 		# 4 = Rechazado
 		# 88 = Inexistente
 		# 99 = Cancelado
-		estado_fs = status_data.get('estado', 'Generado DE')
 		
-		if estado_fs == '2' or estado_fs == 'Aprobado':
+		doc = frappe.get_doc("Sales Invoice", doc_name)
+		
+		# Mapear estado de FacturaSend a estados permitidos en ERPNext
+		# Estados permitidos: "", "Pendiente", "Enviado", "Aprobado", "Rechazado", "Error"
+		estado_fs = str(status_data.get('estado', '0'))
+		
+		if estado_fs == '2':
 			doc.facturasend_estado = 'Aprobado'
 		elif estado_fs == '3':
-			doc.facturasend_estado = 'Aprobado con observación'
-		elif estado_fs == '4' or estado_fs == 'Rechazado':
+			doc.facturasend_estado = 'Aprobado'  # Aprobado con observación también es Aprobado
+		elif estado_fs == '4':
 			doc.facturasend_estado = 'Rechazado'
 		elif estado_fs == '1':
-			doc.facturasend_estado = 'Enviado en Lote'
+			doc.facturasend_estado = 'Enviado'  # Enviado en Lote
+		elif estado_fs == '0':
+			doc.facturasend_estado = 'Enviado'  # Generado DE - mantener como Enviado
 		elif estado_fs == '99':
-			doc.facturasend_estado = 'Cancelado'
+			doc.facturasend_estado = 'Error'  # Cancelado -> Error
+		elif estado_fs == '88':
+			doc.facturasend_estado = 'Error'  # Inexistente -> Error
 		else:
-			# Mantener como Generado DE si no hay cambio de estado
-			doc.facturasend_estado = 'Generado DE'
+			doc.facturasend_estado = 'Enviado'  # Default
 		
 		# Actualizar mensaje con la información del estado
 		mensaje_partes = []
 		if status_data.get('message'):
 			mensaje_partes.append(status_data.get('message'))
 		if status_data.get('estadoDescripcion'):
-			mensaje_partes.append(f"Estado: {status_data.get('estadoDescripcion')}")
+			mensaje_partes.append(f"{status_data.get('estadoDescripcion')}")
 		
-		doc.facturasend_mensaje_estado = ' - '.join(mensaje_partes) if mensaje_partes else str(estado_fs)
+		# Agregar código de estado para referencia
+		mensaje_partes.append(f"(Estado FS: {estado_fs})")
+		
+		doc.facturasend_mensaje_estado = ' - '.join(mensaje_partes) if mensaje_partes else f"Estado {estado_fs}"
 		doc.save(ignore_permissions=True)
 		
 		frappe.db.commit()
